@@ -508,9 +508,15 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
   border-radius:18px 18px 0 0;
   padding:8px 16px calc(var(--safe-b) + 8px);
   display:flex;flex-direction:column;align-items:center;gap:5px;
-  cursor:pointer;flex-shrink:0;
+  cursor:pointer;flex-shrink:0;touch-action:none;
   box-shadow:0 -6px 28px rgba(0,0,0,.5);
 }
+/* 画面最下部（ホームバー領域）を同色で埋めて空白に見せない */
+#bottom-filler{
+  position:fixed;left:0;right:0;bottom:0;height:calc(var(--safe-b) + 2px);
+  background:var(--surface);z-index:34;pointer-events:none;
+}
+body.amb #bottom-filler{background:rgba(19,19,31,.9)}
 #agenda-handle{width:32px;height:3px;background:var(--border2);border-radius:2px}
 #agenda-peek-main{width:100%;display:flex;align-items:center;gap:8px}
 #agenda-peek-label{font-size:.56rem;color:var(--muted);letter-spacing:.12em;white-space:nowrap}
@@ -565,13 +571,18 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
   overflow-y:auto;overflow-x:hidden;
   position:relative;
 }
-/* ヘッダーを常に見える位置に固定 */
-#ev-sheet .drag-handle{
+/* ヘッダーを常に見える位置に固定（全シート共通） */
+#ev-sheet .drag-handle,#settings-sheet .drag-handle,
+#pb-sheet .drag-handle,#fit-sheet .drag-handle{
   position:sticky;top:0;z-index:3;
-  background:var(--surface);margin:0 auto;
-  padding:10px 0;width:100%;
+  background:inherit;margin:0 auto;
+  padding:10px 0;width:100%;flex-shrink:0;
 }
-#ev-sheet .drag-handle::after{
+#ev-sheet .drag-handle{background:var(--surface)}
+#settings-sheet .drag-handle{background:var(--surface)}
+#pb-sheet .drag-handle,#fit-sheet .drag-handle{background:var(--bg2)}
+#ev-sheet .drag-handle::after,#settings-sheet .drag-handle::after,
+#pb-sheet .drag-handle::after,#fit-sheet .drag-handle::after{
   content:'';display:block;width:38px;height:4.5px;
   background:var(--border2);border-radius:3px;margin:0 auto;
 }
@@ -1062,20 +1073,79 @@ body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
 .fit-empty{font-size:.7rem;color:#252540;text-align:center;padding:16px 0;line-height:1.9}
 
 /* ═══════════ ACHIEVEMENT / COMBO ═══════════ */
+/* ═══ SKILL UNLOCK (center) ═══ */
 #achievement-popup{
-  display:none;position:fixed;top:calc(var(--safe-t)+76px);
-  left:50%;transform:translateX(-50%);z-index:200;
-  background:linear-gradient(135deg,#1a1030,#0f1428);
-  border:1px solid var(--accent);border-radius:16px;
-  padding:12px 20px;min-width:210px;text-align:center;
-  box-shadow:0 0 28px rgba(124,92,252,.35);
+  display:none;position:fixed;inset:0;z-index:300;
+  align-items:center;justify-content:center;pointer-events:none;
 }
-#achievement-popup.show{display:block;animation:achIn .38s ease-out}
-@keyframes achIn{from{transform:translateX(-50%) translateY(-16px);opacity:0}
-  to{transform:translateX(-50%) translateY(0);opacity:1}}
-#ach-icon{font-size:1.4rem}
-#ach-title{font-size:.62rem;color:var(--accent2);letter-spacing:.1em;margin:2px 0}
-#ach-text{font-size:.82rem;font-weight:600}
+#achievement-popup.show{display:flex}
+#ach-backdrop{
+  position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 50%,rgba(124,92,252,.28),transparent 62%);
+  animation:achFlash .9s ease-out forwards;
+}
+@keyframes achFlash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+#ach-card{
+  position:relative;text-align:center;padding:26px 34px;
+  background:linear-gradient(160deg,rgba(26,16,54,.96),rgba(12,16,40,.96));
+  border-radius:22px;
+  border:1.5px solid transparent;
+  background-clip:padding-box;
+  box-shadow:0 0 44px rgba(124,92,252,.45),0 10px 40px rgba(0,0,0,.6);
+  animation:achPop 2.9s cubic-bezier(.2,1.3,.4,1) forwards;
+  min-width:230px;
+}
+/* 回転する光の縁取り */
+#ach-card::before{
+  content:'';position:absolute;inset:-1.5px;border-radius:22px;z-index:-1;
+  background:conic-gradient(from 0deg,var(--accent),var(--accent2),#ff90d8,var(--accent));
+  animation:achRing 2.4s linear infinite;
+}
+@keyframes achRing{to{transform:rotate(360deg)}}
+@keyframes achPop{
+  0%{transform:scale(.4) translateY(14px);opacity:0}
+  12%{transform:scale(1.1) translateY(0);opacity:1}
+  22%{transform:scale(1)}
+  82%{transform:scale(1);opacity:1}
+  100%{transform:scale(.94) translateY(-10px);opacity:0}
+}
+/* 広がる衝撃波リング */
+.ach-wave{
+  position:absolute;left:50%;top:50%;width:120px;height:120px;
+  margin:-60px 0 0 -60px;border-radius:50%;
+  border:2px solid var(--accent2);
+  animation:achWave 1.1s ease-out forwards;
+}
+.ach-wave.w2{animation-delay:.18s}
+.ach-wave.w3{animation-delay:.36s}
+@keyframes achWave{
+  0%{transform:scale(.3);opacity:.9}
+  100%{transform:scale(3.6);opacity:0}
+}
+#ach-icon{
+  font-size:2.6rem;line-height:1;margin-bottom:10px;
+  filter:drop-shadow(0 0 16px rgba(167,139,250,.8));
+  animation:achIcon 2.9s ease-out forwards;
+}
+@keyframes achIcon{
+  0%{transform:scale(0) rotate(-40deg)}
+  16%{transform:scale(1.35) rotate(8deg)}
+  26%{transform:scale(1) rotate(0)}
+  100%{transform:scale(1)}
+}
+#ach-title{
+  font-size:.62rem;letter-spacing:.3em;margin-bottom:8px;
+  background:linear-gradient(90deg,var(--accent2),#ff90d8,var(--accent2));
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  animation:achShine 2s linear infinite;
+}
+@keyframes achShine{to{background-position:200% 0}}
+#ach-text{
+  font-size:1.05rem;font-weight:800;color:#fff;letter-spacing:.03em;
+  text-shadow:0 0 18px rgba(167,139,250,.6);
+}
+#ach-sub{font-size:.62rem;color:var(--text2);margin-top:7px;letter-spacing:.08em}
 
 #combo-popup{display:none;position:fixed;top:44%;left:50%;
   transform:translate(-50%,-50%);z-index:210;text-align:center;pointer-events:none}
@@ -1133,6 +1203,19 @@ body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
 .drag-handle{
   width:38px;height:4.5px;background:var(--border2);border-radius:3px;
   margin:10px auto;position:relative;
+}
+/* stickyヘッダー化されたハンドル（後勝ちで確実に適用） */
+#ev-sheet .drag-handle,#settings-sheet .drag-handle,
+#pb-sheet .drag-handle,#fit-sheet .drag-handle{
+  position:sticky;top:0;z-index:3;width:100%;height:auto;
+  padding:10px 0;margin:0;flex-shrink:0;
+}
+#ev-sheet .drag-handle,#settings-sheet .drag-handle{background:var(--surface)}
+#pb-sheet .drag-handle,#fit-sheet .drag-handle{background:var(--bg2)}
+#ev-sheet .drag-handle::after,#settings-sheet .drag-handle::after,
+#pb-sheet .drag-handle::after,#fit-sheet .drag-handle::after{
+  content:'';display:block;width:38px;height:4.5px;
+  background:var(--border2);border-radius:3px;margin:0 auto;
 }
 .drag-handle::before{
   content:'';position:absolute;inset:-14px 0;
@@ -1380,9 +1463,16 @@ body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
 </div>
 
 <div id="achievement-popup">
-  <div id="ach-icon">🏆</div>
-  <div id="ach-title">ACHIEVEMENT</div>
-  <div id="ach-text"></div>
+  <div id="ach-backdrop"></div>
+  <div class="ach-wave"></div>
+  <div class="ach-wave w2"></div>
+  <div class="ach-wave w3"></div>
+  <div id="ach-card">
+    <div id="ach-icon">🏆</div>
+    <div id="ach-title">ACHIEVEMENT</div>
+    <div id="ach-text"></div>
+    <div id="ach-sub"></div>
+  </div>
 </div>
 
 <div id="combo-popup">
@@ -1390,6 +1480,7 @@ body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
   <div id="combo-label">COMBO!</div>
 </div>
 
+<div id="bottom-filler"></div>
 <button id="party-fab">🎉</button>
 <button id="fit-fab" title="筋トレ記録">💪</button>
 <button id="book-fab" title="フレーズ帳">
@@ -2247,19 +2338,24 @@ function updateStreak(){
 
 // ═══════════ ACHIEVEMENTS / COMBO ═══════════
 let achT=null;
-function showAch(icon,title,text){
+function showAch(icon,title,text,sub){
   const el=document.getElementById('achievement-popup');
   document.getElementById('ach-icon').textContent=icon;
   document.getElementById('ach-title').textContent=title;
   document.getElementById('ach-text').textContent=text;
+  document.getElementById('ach-sub').textContent=sub||'';
   el.classList.remove('show');void el.offsetWidth;el.classList.add('show');
-  clearTimeout(achT);achT=setTimeout(()=>el.classList.remove('show'),3000);
+  // 中央から光が弾ける
+  burst(innerWidth/2,innerHeight*.5,30);
+  setTimeout(()=>burst(innerWidth/2,innerHeight*.5,20),180);
+  navigator.vibrate?.([25,15,35]);
+  clearTimeout(achT);achT=setTimeout(()=>el.classList.remove('show'),2900);
 }
 function checkAch(){
   ACHIEVEMENTS.forEach(a=>{
     if(!stats.achievements.includes(a.id)&&a.cond(stats)){
       stats.achievements.push(a.id);saveStats();
-      setTimeout(()=>{showAch(a.icon,'ACHIEVEMENT',a.text);fireDanmaku(10);},400);
+      setTimeout(()=>{showAch(a.icon,'ACHIEVEMENT UNLOCKED',a.text);fireDanmaku(10);},400);
     }
   });
 }
@@ -2866,14 +2962,50 @@ function setDrawer(open,anim=true){
   agendaDrawer.style.transform=open?'translateY(0)':`translateY(${PANEL_H()}px)`;
   if(open)renderAgenda();
 }
-agendaPeek.onclick=()=>setDrawer(!agendaOpen);
-let agY=null;
-agendaPeek.addEventListener('touchstart',e=>agY=e.touches[0].clientY,{passive:true});
-agendaPeek.addEventListener('touchend',e=>{
-  if(agY===null)return;const dy=agY-e.changedTouches[0].clientY;agY=null;
-  if(dy>28&&!agendaOpen)setDrawer(true);
-  else if(dy<-28&&agendaOpen)setDrawer(false);
-},{passive:true});
+agendaPeek.onclick=e=>{if(!agDragMoved)setDrawer(!agendaOpen)};
+// 指に追従するドラッグ（全シートと統一した挙動）
+let agY=null,agDY=0,agLastY=0,agLastT=0,agVel=0,agDragMoved=false;
+agendaPeek.addEventListener('pointerdown',e=>{
+  if(e.target.closest('.m-dot'))return;
+  agY=e.clientY;agDY=0;agDragMoved=false;
+  agLastY=e.clientY;agLastT=performance.now();agVel=0;
+  agendaDrawer.style.transition='none';
+  try{agendaPeek.setPointerCapture(e.pointerId)}catch(_){}
+});
+agendaPeek.addEventListener('pointermove',e=>{
+  if(agY===null)return;
+  const dy=e.clientY-agY;
+  if(Math.abs(dy)>5)agDragMoved=true;
+  const base=agendaOpen?0:PANEL_H();
+  let y=base+dy;
+  // 上限・下限でゴム抵抗
+  if(y<0)y=y*0.2;
+  if(y>PANEL_H())y=PANEL_H()+(y-PANEL_H())*0.2;
+  agendaDrawer.style.transform=`translateY(${y}px)`;
+  const now=performance.now();
+  agVel=(e.clientY-agLastY)/Math.max(1,now-agLastT);
+  agLastY=e.clientY;agLastT=now;
+  e.preventDefault();
+});
+function agEnd(){
+  if(agY===null)return;
+  agY=null;
+  agendaDrawer.style.transition='transform .38s cubic-bezier(.32,.72,.33,1)';
+  if(!agDragMoved)return; // タップ扱い → onclickに任せる
+  // 速度と位置から開閉を決定
+  let open=agendaOpen;
+  if(agVel<-0.4)open=true;
+  else if(agVel>0.4)open=false;
+  else{
+    const cur=agendaDrawer.getBoundingClientRect().top;
+    const closedTop=innerHeight-PEEK_H();
+    open=cur<closedTop-PANEL_H()*0.45;
+  }
+  setDrawer(open);
+  navigator.vibrate?.(8);
+}
+agendaPeek.addEventListener('pointerup',agEnd);
+agendaPeek.addEventListener('pointercancel',agEnd);
 document.getElementById('slider-wrap').addEventListener('pointerdown',()=>{if(agendaOpen)setDrawer(false)},{passive:true});
 
 function upcoming(){
@@ -3045,7 +3177,7 @@ function secretTap(){
   if(secretCount===7&&!settings.secretUnlocked){
     settings.secretUnlocked=true;settings.theme='galaxy';
     saveSettings();applyTheme();
-    showAch('🌌','SECRET UNLOCKED','ギャラクシーテーマ解放！');
+    showAch('🌌','SECRET UNLOCKED','ギャラクシーテーマ解放！','設定 → テーマカラーから選べます');
     fireDanmaku(12);
     burst(innerWidth/2,innerHeight*.3);
     setTimeout(()=>burst(innerWidth*.3,innerHeight*.5),250);
@@ -3212,7 +3344,7 @@ partyFab.addEventListener('pointerdown',()=>{
     setTimeout(()=>burst(innerWidth*.25,innerHeight*.55),200);
     setTimeout(()=>burst(innerWidth*.75,innerHeight*.55),400);
     setTimeout(()=>burst(innerWidth/2,innerHeight*.7),600);
-    showAch('🎆','MEGA FESTIVAL','超大狂乱モード発動！！');
+    showAch('🎆','MEGA FESTIVAL','超大狂乱モード発動！！','40連コメント');
   },700);
 });
 partyFab.addEventListener('pointerup',()=>{
