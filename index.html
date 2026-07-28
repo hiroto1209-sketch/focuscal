@@ -561,7 +561,8 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
 #ev-sheet{
   background:var(--surface);border-radius:22px 22px 0 0;
   padding:0 0 calc(var(--safe-b)+10px);
-  width:100%;max-width:540px;max-height:92vh;overflow-y:auto;
+  width:100%;max-width:540px;max-height:92vh;
+  overflow-y:auto;overflow-x:hidden;
   position:relative;
 }
 /* ヘッダーを常に見える位置に固定 */
@@ -809,7 +810,7 @@ textarea.form-input{resize:none;min-height:52px}
 #settings-sheet{
   background:var(--surface);border-radius:22px 22px 0 0;
   padding:0 0 calc(var(--safe-b)+16px);width:100%;max-width:480px;
-  max-height:85vh;overflow-y:auto;
+  max-height:85vh;overflow-y:auto;overflow-x:hidden;
   animation:slideUp .22s ease-out;
 }
 .settings-title{font-size:.82rem;font-weight:600;letter-spacing:.08em;
@@ -1134,7 +1135,7 @@ body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
   margin:10px auto;position:relative;
 }
 .drag-handle::before{
-  content:'';position:absolute;inset:-14px -60px;
+  content:'';position:absolute;inset:-14px 0;
 }
 .sheet-grab-zone{cursor:grab;touch-action:none}
 
