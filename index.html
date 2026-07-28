@@ -560,14 +560,33 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
 #ev-overlay.open{display:flex}
 #ev-sheet{
   background:var(--surface);border-radius:22px 22px 0 0;
-  padding:0 0 calc(var(--safe-b)+14px);
-  width:100%;max-width:540px;max-height:90vh;overflow-y:auto;
-  animation:slideUp .22s ease-out;
+  padding:0 0 calc(var(--safe-b)+10px);
+  width:100%;max-width:540px;max-height:92vh;overflow-y:auto;
+  position:relative;
 }
+/* ヘッダーを常に見える位置に固定 */
+#ev-sheet .drag-handle{
+  position:sticky;top:0;z-index:3;
+  background:var(--surface);margin:0 auto;
+  padding:10px 0;width:100%;
+}
+#ev-sheet .drag-handle::after{
+  content:'';display:block;width:38px;height:4.5px;
+  background:var(--border2);border-radius:3px;margin:0 auto;
+}
+#ev-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px 12px;border-bottom:1px solid var(--border);
+  position:sticky;top:24px;z-index:3;background:var(--surface);
+}
+/* フォーム表示中は「＋追加」を隠す（押しても意味がないため） */
+#ev-sheet.form-open #ev-add-btn{display:none}
+/* 予定ゼロ＆フォーム表示中は空の一覧を隠す */
+#ev-sheet.no-events.form-open #ev-list{display:none}
+#ev-sheet.form-open #ev-form{border-top:none}
+/* 末尾の余白を詰める */
+#ev-form{padding-bottom:6px}
 @keyframes slideUp{from{transform:translateY(44px);opacity:0}to{transform:translateY(0);opacity:1}}
-.drag-handle{width:32px;height:3px;background:var(--border2);border-radius:2px;margin:12px auto}
-#ev-header{display:flex;align-items:center;justify-content:space-between;
-  padding:0 18px 12px;border-bottom:1px solid var(--border)}
 #ev-date-label{font-size:.9rem;font-weight:600}
 #day-done-count{font-size:.62rem;color:var(--green);margin-top:2px}
 #ev-add-btn{
@@ -2705,6 +2724,7 @@ document.getElementById('ev-add-btn').onclick=()=>{
 };
 function openForm(ev){
   evForm.classList.add('open');
+  document.getElementById('ev-sheet').classList.add('form-open');
   document.getElementById('f-title').value=ev.title||'';
   document.getElementById('f-memo').value=ev.memo||'';
   evCat=ev.cat||'other';evPri=ev.pri||'med';
@@ -2730,7 +2750,8 @@ function str2mm(s){
   if(!m)return null;
   return(+m[1])*60+(+m[2]);
 }
-document.getElementById('f-cancel').onclick=()=>{evForm.classList.remove('open');editingIdx=null};
+document.getElementById('f-cancel').onclick=()=>{closeForm();editingIdx=null};
+function closeForm(){evForm.classList.remove('open');document.getElementById('ev-sheet').classList.remove('form-open')}
 document.getElementById('f-save').onclick=()=>{
   const title=document.getElementById('f-title').value.trim();
   if(!title){document.getElementById('f-title').focus();return}
@@ -2750,7 +2771,7 @@ document.getElementById('f-save').onclick=()=>{
     evs.push({id:Date.now(),done:false,...data});
   }
   editingIdx=null;
-  saveMonth(m,md);evForm.classList.remove('open');
+  saveMonth(m,md);closeForm();
   renderList(m,d);refreshPages();updateAll();
   const r=document.getElementById('f-save').getBoundingClientRect();
   burst(r.left+r.width/2,r.top);
@@ -2767,10 +2788,11 @@ function openEventSheet(m,d){
   // タップした瞬間に入力フォームまで開く（1ステップ省略）
   openForm({title:'',memo:'',cat:'other',pri:'med',allday:false,start:'9:00',end:'10:00'});
 }
-function closeSheet(){evOverlay.classList.remove('open');evForm.classList.remove('open')}
+function closeSheet(){evOverlay.classList.remove('open');closeForm()}
 
 function renderList(m,d){
   const evs=dayData(loadMonth(m),d).events||[];
+  document.getElementById('ev-sheet').classList.toggle('no-events',evs.length===0);
   const done=evs.filter(e=>e.done).length;
   document.getElementById('day-done-count').textContent=evs.length?`${done}/${evs.length} 完了`:'';
   evList.innerHTML='';
