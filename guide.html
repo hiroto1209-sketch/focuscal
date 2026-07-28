@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09090f">
+<title>FocusCal 使い方ガイド</title>
+<style>
+:root{
+  --bg:#09090f;--bg2:#0d0d16;--surface:#13131f;--surface2:#191926;
+  --border:#22223a;--border2:#2c2c46;
+  --text:#eeeeff;--text2:#a8a8cc;--muted:#5a5a80;
+  --accent:#7c5cfc;--accent2:#a78bfa;
+  --gold:#f0c040;--green:#42d984;--pink:#f060a8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Hiragino Sans','Yu Gothic UI','Noto Sans JP',sans-serif;
+  line-height:1.9;padding-bottom:60px;
+}
+::selection{background:var(--accent);color:#fff}
+
+/* hero */
+header{
+  padding:calc(env(safe-area-inset-top) + 54px) 22px 46px;
+  text-align:center;
+  background:radial-gradient(ellipse 90% 60% at 50% 20%,#191038 0%,var(--bg) 72%);
+  border-bottom:1px solid var(--border);
+}
+.eyebrow{font-size:.62rem;letter-spacing:.34em;color:var(--accent2);margin-bottom:16px}
+h1{
+  font-size:2rem;font-weight:800;letter-spacing:.06em;margin-bottom:12px;
+  background:linear-gradient(100deg,var(--accent2),var(--pink));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.lead{font-size:.84rem;color:var(--text2);max-width:420px;margin:0 auto}
+
+/* nav chips */
+nav{
+  display:flex;gap:7px;overflow-x:auto;padding:16px 18px;
+  border-bottom:1px solid var(--border);position:sticky;top:0;
+  background:rgba(9,9,15,.92);backdrop-filter:blur(10px);z-index:10;
+  -webkit-overflow-scrolling:touch;
+}
+nav a{
+  flex-shrink:0;font-size:.68rem;color:var(--text2);text-decoration:none;
+  border:1px solid var(--border2);border-radius:20px;padding:6px 14px;
+  transition:all .15s;white-space:nowrap;
+}
+nav a:active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+main{max-width:640px;margin:0 auto;padding:0 18px}
+section{padding:44px 0 8px;scroll-margin-top:64px}
+h2{
+  font-size:1.15rem;font-weight:700;letter-spacing:.04em;margin-bottom:6px;
+  display:flex;align-items:center;gap:9px;
+}
+.sec-sub{font-size:.72rem;color:var(--muted);margin-bottom:22px;letter-spacing:.04em}
+
+/* step cards */
+.step{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:16px 18px;margin-bottom:11px;position:relative;
+}
+.step-n{
+  font-size:.56rem;font-weight:700;letter-spacing:.14em;color:var(--accent2);
+  margin-bottom:6px;
+}
+.step h3{font-size:.92rem;font-weight:700;margin-bottom:6px}
+.step p{font-size:.79rem;color:var(--text2)}
+.step .tip{
+  font-size:.71rem;color:var(--gold);margin-top:9px;
+  padding-left:16px;position:relative;
+}
+.step .tip::before{content:'💡';position:absolute;left:0;font-size:.7rem}
+
+/* gesture table */
+.gest{
+  display:flex;align-items:flex-start;gap:12px;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;margin-bottom:9px;
+}
+.gest-ic{
+  flex-shrink:0;width:38px;height:38px;border-radius:11px;
+  background:var(--surface2);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:1.05rem;
+}
+.gest-b{flex:1;min-width:0}
+.gest-t{font-size:.84rem;font-weight:600;margin-bottom:2px}
+.gest-d{font-size:.74rem;color:var(--text2)}
+
+/* feature blocks */
+.feat{
+  border-left:2px solid var(--accent);padding-left:16px;margin-bottom:22px;
+}
+.feat h3{font-size:.92rem;font-weight:700;margin-bottom:5px}
+.feat p{font-size:.79rem;color:var(--text2)}
+ul.plain{list-style:none;margin-top:8px}
+ul.plain li{
+  font-size:.77rem;color:var(--text2);padding-left:16px;position:relative;margin-bottom:4px;
+}
+ul.plain li::before{
+  content:'';position:absolute;left:2px;top:.75em;width:5px;height:5px;
+  border-radius:50%;background:var(--accent);
+}
+
+/* theme swatches */
+.themes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.th{
+  border-radius:12px;padding:12px 6px;text-align:center;
+  font-size:.62rem;font-weight:700;color:#fff;
+  text-shadow:0 1px 3px rgba(0,0,0,.6);
+}
+
+/* secret box */
+.secret{
+  background:linear-gradient(135deg,#160f2e,#0d1428);
+  border:1px solid var(--accent);border-radius:16px;
+  padding:18px;margin-top:14px;
+}
+.secret h3{font-size:.9rem;margin-bottom:10px;color:var(--accent2)}
+.secret-item{
+  font-size:.78rem;color:var(--text2);margin-bottom:9px;
+  padding-left:18px;position:relative;
+}
+.secret-item::before{content:'🔓';position:absolute;left:0;font-size:.72rem}
+.secret-item b{color:var(--text)}
+.blur{
+  filter:blur(4px);transition:filter .35s;cursor:pointer;
+}
+.blur.reveal{filter:none}
+
+/* install steps */
+.inst{
+  background:var(--surface);border:1px solid var(--border2);border-radius:16px;
+  padding:18px;margin-bottom:12px;
+}
+.inst h3{font-size:.88rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.inst ol{margin-left:18px}
+.inst li{font-size:.78rem;color:var(--text2);margin-bottom:6px}
+
+/* faq */
+details{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;margin-bottom:9px;
+}
+summary{
+  font-size:.83rem;font-weight:600;cursor:pointer;list-style:none;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'＋';color:var(--muted);font-size:.9rem;flex-shrink:0}
+details[open] summary::after{content:'−'}
+details p{font-size:.76rem;color:var(--text2);margin-top:10px}
+
+footer{
+  text-align:center;padding:50px 20px 20px;
+  font-size:.64rem;color:var(--muted);letter-spacing:.08em;
+}
+.cta{
+  display:block;text-align:center;
+  background:linear-gradient(100deg,var(--accent),var(--pink));
+  color:#fff;text-decoration:none;font-weight:700;font-size:.88rem;
+  padding:16px;border-radius:14px;margin:30px 0 10px;letter-spacing:.06em;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">USER GUIDE</div>
+  <h1>FocusCal</h1>
+  <p class="lead">
+    予定を終わらせるたび、画面がお祝いしてくれるカレンダー。<br>
+    「続かない」を、楽しさで解決するために作りました。
+  </p>
+</header>
+
+<nav>
+  <a href="#start">はじめかた</a>
+  <a href="#basic">基本操作</a>
+  <a href="#party">お祝い機能</a>
+  <a href="#lang">語学モード</a>
+  <a href="#fit">筋トレ記録</a>
+  <a href="#theme">テーマ</a>
+  <a href="#secret">隠し要素</a>
+  <a href="#faq">よくある質問</a>
+</nav>
+
+<main>
+
+<section id="start">
+  <h2>📲 はじめかた</h2>
+  <div class="sec-sub">ホーム画面に置くと、普通のアプリのように使えます</div>
+
+  <div class="inst">
+    <h3>🍎 iPhone（Safariで開いてください）</h3>
+    <ol>
+      <li>アプリのURLを Safari で開く</li>
+      <li>画面下の共有ボタン（□に↑）をタップ</li>
+      <li>「ホーム画面に追加」を選ぶ</li>
+      <li>右上の「追加」をタップ → 完成！</li>
+    </ol>
+  </div>
+
+  <div class="inst">
+    <h3>🤖 Android（Chrome）</h3>
+    <ol>
+      <li>アプリのURLを Chrome で開く</li>
+      <li>右上のメニュー（⋮）をタップ</li>
+      <li>「ホーム画面に追加」を選ぶ</li>
+    </ol>
+  </div>
+
+  <div class="step">
+    <div class="step-n">DATA</div>
+    <h3>データはこの端末の中だけに保存されます</h3>
+    <p>アカウント登録もログインも不要。入力した予定は誰にも送信されず、あなたのスマホの中だけに残ります。</p>
+    <div class="tip">Safariの履歴やサイトデータを消すと予定も消えます。大事な予定は別でも控えておくと安心です。</div>
+  </div>
+</section>
+
+<section id="basic">
+  <h2>👆 基本操作</h2>
+  <div class="sec-sub">覚えるのは「タップ」と「長押し」の2つだけ</div>
+
+  <div class="gest">
+    <div class="gest-ic">👆</div>
+    <div class="gest-b">
+      <div class="gest-t">日付をタップ</div>
+      <div class="gest-d">その日の予定入力画面がすぐ開きます。タイトルを入れて「保存する」だけでOK。</div>
+    </div>
+  </div>
+  <div class="gest">
+    <div class="gest-ic">✋</div>
+    <div class="gest-b">
+      <div class="gest-t">日付を長押し（0.5秒）</div>
+      <div class="gest-d">色とエフェクトを選べます。楽しみな予定を光らせておくと、カウントダウンが始まります。</div>
+    </div>
+  </div>
+  <div class="gest">
+    <div class="gest-ic">↔️</div>
+    <div class="gest-b">
+      <div class="gest-t">左右にスワイプ</div>
+      <div class="gest-d">月を移動。上部の「今日」ボタンでいつでも今月に戻れます。</div>
+    </div>
+  </div>
+  <div class="gest">
+    <div class="gest-ic">⭕️</div>
+    <div class="gest-b">
+      <div class="gest-t">予定の ○ をタップ</div>
+      <div class="gest-d">完了！お祝いコメントが流れます。ここがこのアプリの主役です。</div>
+    </div>
+  </div>
+  <div class="gest">
+    <div class="gest-ic">✏️</div>
+    <div class="gest-b">
+      <div class="gest-t">予定そのものをタップ</div>
+      <div class="gest-d">内容を編集できます。時間はバーを指でスライドして直感的に設定。</div>
+    </div>
+  </div>
+  <div class="gest">
+    <div class="gest-ic">↩️</div>
+    <div class="gest-b">
+      <div class="gest-t">上部の ↩ / ↪</div>
+      <div class="gest-d">間違えても何度でも取り消し・やり直しができます。安心して触ってください。</div>
+    </div>
+  </div>
+  <div class="gest">
+    <div class="gest-ic">📋</div>
+    <div class="gest-b">
+      <div class="gest-t">画面下のバーを上にスワイプ</div>
+      <div class="gest-d">今日から年末までの予定を一覧できます。</div>
+    </div>
+  </div>
+
+  <div class="step" style="margin-top:16px">
+    <div class="step-n">BOTTOM</div>
+    <h3>カレンダーの下も使えます</h3>
+    <p><b>今日のフォーカス</b>：今日やることだけを表示。ここからも○タップで完了できます。<br>
+    <b>クイックメモ</b>：予定にするほどでもない思いつきを書き捨てる場所。</p>
+  </div>
+</section>
+
+<section id="party">
+  <h2>🎉 お祝い機能</h2>
+  <div class="sec-sub">このアプリのいちばん大事なところ</div>
+
+  <div class="feat">
+    <h3>予定を完了すると画面が沸きます</h3>
+    <p>ニコニコ動画のようにコメントが流れ、光が弾け、音が鳴ります。「終わらせると気持ちいい」を作るための仕組みです。</p>
+  </div>
+  <div class="feat">
+    <h3>🎉ボタンでいつでもお祝い</h3>
+    <p>画面右下の🎉を押すと、予定がなくてもお祝いされます。元気が出ない日にどうぞ。</p>
+    <ul class="plain">
+      <li>長押しすると……何かが起きます（隠し要素の項目へ）</li>
+    </ul>
+  </div>
+  <div class="feat">
+    <h3>コメントは自由に書き換えられます</h3>
+    <p>設定（⚙）→「お祝いコメント」から、自分が言われたい言葉に変更できます。友達の名前を入れるのもおすすめ。</p>
+    <ul class="plain">
+      <li>量も「控えめ / ふつう / お祭り / 大狂乱」から選べます</li>
+    </ul>
+  </div>
+</section>
+
+<section id="lang">
+  <h2>🌏 語学モード</h2>
+  <div class="sec-sub">達成の瞬間に、英語や中国語が流れます</div>
+
+  <div class="feat">
+    <h3>設定から言語を切り替えるだけ</h3>
+    <p>⚙ →「お祝いコメントの言語」で <b>日本語 / 英語 / 中国語</b> を選択。英語なら和訳つき、中国語ならピンイン＋和訳つきで流れ、ネイティブ音声も再生されます。</p>
+    <ul class="plain">
+      <li>ナチュラル（教科書的）とスラング（リアルな口語）を切替可能</li>
+      <li>収録フレーズは全146個。自分のフレーズも追加できます</li>
+    </ul>
+  </div>
+  <div class="feat">
+    <h3>📖 フレーズ帳（右下の本のボタン）</h3>
+    <p>収録フレーズを一覧で勉強できます。</p>
+    <ul class="plain">
+      <li>発音記号・ピンイン・日本語訳つき</li>
+      <li>タップすると音声が流れる（🐢でゆっくり再生）</li>
+      <li>☆でお気に入り登録 → 自分だけの復習リストに</li>
+      <li>🔍で検索も可能</li>
+    </ul>
+  </div>
+</section>
+
+<section id="fit">
+  <h2>💪 筋トレ記録</h2>
+  <div class="sec-sub">鍛えた部位が光る、人体ヒートマップ</div>
+
+  <div class="feat">
+    <h3>使い方は3ステップ</h3>
+    <ul class="plain">
+      <li>右下の💪ボタンを押す</li>
+      <li>人体図の鍛えた部位をタップ（前面・背面あり）</li>
+      <li>セット数を選んで「記録する」→ お祝いが流れます</li>
+    </ul>
+    <p style="margin-top:8px">種目名・回数・重量は任意。面倒なら部位とセット数だけでOKです。</p>
+  </div>
+  <div class="feat">
+    <h3>鍛えるほど身体が光ります</h3>
+    <p>その月に鍛えた回数が多いほど、その部位の色が濃くなり、4回以上でネオンのように発光します。「今月は脚が真っ暗だな」が一目でわかります。</p>
+    <ul class="plain">
+      <li>7部位すべて鍛えると「🏆フルボディ達成」</li>
+      <li>筋トレした日はカレンダーに💪マークが付きます（設定でオフ可）</li>
+    </ul>
+  </div>
+</section>
+
+<section id="theme">
+  <h2>🎨 テーマ</h2>
+  <div class="sec-sub">設定 → テーマカラー から変更できます</div>
+
+  <div class="themes">
+    <div class="th" style="background:linear-gradient(135deg,#7c5cfc,#a78bfa)">バイオレット</div>
+    <div class="th" style="background:linear-gradient(135deg,#20a8d8,#64dcff)">シアン</div>
+    <div class="th" style="background:linear-gradient(135deg,#28a860,#42d984)">エメラルド</div>
+    <div class="th" style="background:linear-gradient(135deg,#d09020,#f0c040)">ゴールド</div>
+    <div class="th" style="background:linear-gradient(135deg,#d84050,#ff7888)">クリムゾン</div>
+    <div class="th" style="background:linear-gradient(135deg,#d84898,#ff88c8)">ピンク</div>
+    <div class="th" style="background:linear-gradient(135deg,#3068d8,#70a0ff)">ブルー</div>
+    <div class="th" style="background:linear-gradient(135deg,#8888a8,#ccccdd)">モノクロ</div>
+    <div class="th" style="background:linear-gradient(135deg,#e05090,#ffa8cc)">✦ 桜</div>
+    <div class="th" style="background:linear-gradient(135deg,#1888c8,#50d8f0)">✦ 深海</div>
+    <div class="th" style="background:linear-gradient(135deg,#e06020,#ffb050)">✦ 焔</div>
+    <div class="th" style="background:linear-gradient(135deg,#28b860,#40ff88)">✦ ドット</div>
+  </div>
+
+  <div class="step" style="margin-top:14px">
+    <div class="step-n">✦ PREMIUM</div>
+    <h3>✦つきは背景が動きます</h3>
+    <p><b>桜</b>は花びらが舞い、<b>深海</b>は泡が昇り、<b>焔</b>は火の粉が立ちのぼります。<b>ドット</b>を選ぶと画面がレトロなコンピュータ風に変身します。</p>
+  </div>
+</section>
+
+<section id="secret">
+  <h2>🤫 隠し要素</h2>
+  <div class="sec-sub">タップするとネタバレが表示されます</div>
+
+  <div class="secret">
+    <h3>見つけた人だけの機能があります</h3>
+    <div class="secret-item blur" onclick="this.classList.toggle('reveal')">
+      <b>「今日」ボタンを7回連打</b> → 隠しテーマ「🌌ギャラクシー」が解放。星が瞬き、流れ星が落ち、オーロラが漂う特別な画面になります。
+    </div>
+    <div class="secret-item blur" onclick="this.classList.toggle('reveal')">
+      <b>🎉ボタンを長押し</b> → 「MEGA FESTIVAL」発動。40連コメントと四方からの光で画面が埋め尽くされます。
+    </div>
+    <p style="font-size:.68rem;color:var(--muted);margin-top:12px">
+      ……他にもまだあるかもしれません。
+    </p>
+  </div>
+</section>
+
+<section id="faq">
+  <h2>❓ よくある質問</h2>
+  <div class="sec-sub"></div>
+
+  <details>
+    <summary>無料ですか？</summary>
+    <p>はい、完全無料です。広告もありません。</p>
+  </details>
+  <details>
+    <summary>予定は他人に見られませんか？</summary>
+    <p>見られません。データはあなたの端末内にのみ保存され、サーバーには一切送信されていません。</p>
+  </details>
+  <details>
+    <summary>間違えて予定を消してしまいました</summary>
+    <p>画面上部の「↩」ボタンで元に戻せます。何度でも遡れます（最大100回分）。</p>
+  </details>
+  <details>
+    <summary>音が出ないのですが</summary>
+    <p>端末がマナーモードだと鳴らない場合があります。また設定（⚙）で「🔇音声なし」になっていないか確認してください。</p>
+  </details>
+  <details>
+    <summary>通知は来ますか？</summary>
+    <p>現在、通知機能はありません。ホーム画面に置いて、開いた時に確認する使い方を想定しています。</p>
+  </details>
+  <details>
+    <summary>週の始まりを月曜にしたい</summary>
+    <p>設定（⚙）→「週の始まり」で切り替えられます。</p>
+  </details>
+  <details>
+    <summary>機種変更したらどうなりますか？</summary>
+    <p>データは引き継がれません。現在バックアップ機能を準備中です。</p>
+  </details>
+</section>
+
+<a class="cta" href="./index.html">カレンダーを開く →</a>
+
+</main>
+
+<footer>
+  FocusCal — 使ってみた感想、ぜひ教えてください
+</footer>
+
+</body>
+</html>
