@@ -1062,7 +1062,7 @@ body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
 .fit-empty{font-size:.7rem;color:#252540;text-align:center;padding:16px 0;line-height:1.9}
 
 /* ═══════════ ACHIEVEMENT / COMBO ═══════════ */
-/* ═══ SKILL UNLOCK (center) ═══ */
+/* ═══ ACHIEVEMENT (上から中央へ降下) ═══ */
 #achievement-popup{
   display:none;position:fixed;inset:0;z-index:300;
   align-items:center;justify-content:center;pointer-events:none;
@@ -1070,60 +1070,46 @@ body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
 #achievement-popup.show{display:flex}
 #ach-backdrop{
   position:absolute;inset:0;
-  background:radial-gradient(circle at 50% 50%,rgba(124,92,252,.28),transparent 62%);
-  animation:achFlash .9s ease-out forwards;
+  background:radial-gradient(circle at 50% 50%,rgba(124,92,252,.22),transparent 65%);
+  animation:achFlash 1s ease-out forwards;
 }
-@keyframes achFlash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+@keyframes achFlash{0%{opacity:0}22%{opacity:1}100%{opacity:0}}
 #ach-card{
-  position:relative;text-align:center;padding:26px 34px;
-  background:linear-gradient(160deg,rgba(26,16,54,.96),rgba(12,16,40,.96));
-  border-radius:22px;
-  border:1.5px solid transparent;
-  background-clip:padding-box;
-  box-shadow:0 0 44px rgba(124,92,252,.45),0 10px 40px rgba(0,0,0,.6);
-  animation:achPop 2.9s cubic-bezier(.2,1.3,.4,1) forwards;
-  min-width:230px;
+  position:relative;text-align:center;
+  background:linear-gradient(135deg,#1a1030,#0f1428);
+  border:1px solid var(--accent);border-radius:18px;
+  padding:16px 26px;min-width:230px;
+  box-shadow:0 0 34px rgba(124,92,252,.45),0 12px 40px rgba(0,0,0,.6);
+  animation:achDrop 3s cubic-bezier(.22,1.2,.36,1) forwards;
 }
-/* 回転する光の縁取り */
-#ach-card::before{
-  content:'';position:absolute;inset:-1.5px;border-radius:22px;z-index:-1;
-  background:conic-gradient(from 0deg,var(--accent),var(--accent2),#ff90d8,var(--accent));
-  animation:achRing 2.4s linear infinite;
+/* 画面上部から中央へ、弾みながら降りてくる */
+@keyframes achDrop{
+  0%{transform:translateY(-46vh) scale(.82);opacity:0}
+  10%{opacity:1}
+  38%{transform:translateY(0) scale(1.04)}
+  46%{transform:translateY(0) scale(1)}
+  86%{transform:translateY(0) scale(1);opacity:1}
+  100%{transform:translateY(-14px) scale(.96);opacity:0}
 }
-@keyframes achRing{to{transform:rotate(360deg)}}
-@keyframes achPop{
-  0%{transform:scale(.4) translateY(14px);opacity:0}
-  12%{transform:scale(1.1) translateY(0);opacity:1}
-  22%{transform:scale(1)}
-  82%{transform:scale(1);opacity:1}
-  100%{transform:scale(.94) translateY(-10px);opacity:0}
-}
-/* 広がる衝撃波リング */
+/* 着地時に広がる衝撃波 */
 .ach-wave{
   position:absolute;left:50%;top:50%;width:120px;height:120px;
   margin:-60px 0 0 -60px;border-radius:50%;
-  border:2px solid var(--accent2);
-  animation:achWave 1.1s ease-out forwards;
+  border:2px solid var(--accent2);opacity:0;
+  animation:achWave 1s ease-out forwards;animation-delay:.42s;
 }
-.ach-wave.w2{animation-delay:.18s}
-.ach-wave.w3{animation-delay:.36s}
+.ach-wave.w2{animation-delay:.56s}
+.ach-wave.w3{animation-delay:.7s}
 @keyframes achWave{
-  0%{transform:scale(.3);opacity:.9}
-  100%{transform:scale(3.6);opacity:0}
+  0%{transform:scale(.3);opacity:.85}
+  100%{transform:scale(3.4);opacity:0}
 }
 #ach-icon{
-  font-size:2.6rem;line-height:1;margin-bottom:10px;
-  filter:drop-shadow(0 0 16px rgba(167,139,250,.8));
-  animation:achIcon 2.9s ease-out forwards;
-}
-@keyframes achIcon{
-  0%{transform:scale(0) rotate(-40deg)}
-  16%{transform:scale(1.35) rotate(8deg)}
-  26%{transform:scale(1) rotate(0)}
-  100%{transform:scale(1)}
+  font-size:1.9rem;line-height:1;margin-bottom:5px;
+  filter:drop-shadow(0 0 12px rgba(167,139,250,.7));
 }
 #ach-title{
-  font-size:.62rem;letter-spacing:.3em;margin-bottom:8px;
+  font-size:.6rem;letter-spacing:.24em;margin-bottom:5px;
   background:linear-gradient(90deg,var(--accent2),#ff90d8,var(--accent2));
   background-size:200% 100%;
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
@@ -1131,10 +1117,9 @@ body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
 }
 @keyframes achShine{to{background-position:200% 0}}
 #ach-text{
-  font-size:1.05rem;font-weight:800;color:#fff;letter-spacing:.03em;
-  text-shadow:0 0 18px rgba(167,139,250,.6);
+  font-size:.92rem;font-weight:700;color:#fff;letter-spacing:.02em;
 }
-#ach-sub{font-size:.62rem;color:var(--text2);margin-top:7px;letter-spacing:.08em}
+#ach-sub{font-size:.6rem;color:var(--text2);margin-top:5px;letter-spacing:.06em}
 
 #combo-popup{display:none;position:fixed;top:44%;left:50%;
   transform:translate(-50%,-50%);z-index:210;text-align:center;pointer-events:none}
@@ -1396,6 +1381,10 @@ body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
     <div class="settings-section">
       <div class="settings-section-label">テーマカラー</div>
       <div id="theme-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px"></div>
+    </div>
+    <div class="settings-section" id="bg-section" style="display:none">
+      <div class="settings-section-label">🎨 背景カラー（隠し要素で解放）</div>
+      <div id="bg-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px"></div>
     </div>
     <div class="settings-section">
       <div class="settings-section-label">筋トレした日に💪マークを表示</div>
@@ -1903,6 +1892,29 @@ document.addEventListener('visibilitychange',()=>{
     else if(document.visibilityState!=='visible'&&gRaf){cancelAnimationFrame(gRaf);gRaf=null}
   }
 });
+const BG_TINTS=[
+  {key:'default',label:'標準',   bg:'#09090f',bg2:'#0d0d16',surface:'#13131f',surface2:'#191926',surface3:'#20202f',border:'#22223a',border2:'#2c2c46'},
+  {key:'ink',    label:'漆黒',   bg:'#000000',bg2:'#050508',surface:'#0c0c12',surface2:'#12121a',surface3:'#181822',border:'#1c1c28',border2:'#26263a'},
+  {key:'navy',   label:'ネイビー',bg:'#060b18',bg2:'#0a1020',surface:'#0f1628',surface2:'#141d33',surface3:'#1a2440',border:'#1e2a44',border2:'#283654'},
+  {key:'forest', label:'深緑',   bg:'#04100b',bg2:'#071610',surface:'#0b1e16',surface2:'#10261c',surface3:'#153024',border:'#1a3628',border2:'#234634'},
+  {key:'wine',   label:'ワイン', bg:'#120609',bg2:'#180a0e',surface:'#221016',surface2:'#2a151c',surface3:'#341b24',border:'#3a1f28',border2:'#4a2834'},
+  {key:'plum',   label:'すみれ', bg:'#0c0616',bg2:'#110a1e',surface:'#1a1030',surface2:'#20153a',surface3:'#281c48',border:'#2c2048',border2:'#3a2c5c'},
+  {key:'sand',   label:'砂鉄',   bg:'#0e0c08',bg2:'#14110c',surface:'#1e1a12',surface2:'#262118',surface3:'#302a1e',border:'#342d20',border2:'#443a2a'},
+  {key:'slate',  label:'スレート',bg:'#0b0d10',bg2:'#101318',surface:'#171b22',surface2:'#1e232c',surface3:'#262c38',border:'#28303c',border2:'#343e4e'},
+  {key:'teal',   label:'深海青', bg:'#040f12',bg2:'#06161a',surface:'#0a1f26',surface2:'#0f2830',surface3:'#14323c',border:'#183842',border2:'#204854'},
+];
+function applyBgTint(){
+  const t=BG_TINTS.find(x=>x.key===settings.bgTint)||BG_TINTS[0];
+  const r=document.documentElement.style;
+  r.setProperty('--bg',t.bg);
+  r.setProperty('--bg2',t.bg2);
+  r.setProperty('--surface',t.surface);
+  r.setProperty('--surface2',t.surface2);
+  r.setProperty('--surface3',t.surface3);
+  r.setProperty('--border',t.border);
+  r.setProperty('--border2',t.border2);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',t.bg);
+}
 const JULY_MARKED=new Set([3,11,15,19,22,26,27,31]);
 const JULY_DOUBLE=new Set([6,7]);
 const DEFAULT_DM_MSGS=['よくやった！！','天才かよ','888888888','ナイス達成✨','その調子！','うおおおおお','完璧です','神','進んでる進んでる','えらい！！'];
@@ -2109,8 +2121,9 @@ function loadSettings(){
       dmLang:s.dmLang??'ja',dmVoice:s.dmVoice??true,dmStyle:s.dmStyle??'mix',
       enCustom:s.enCustom??[],zhCustom:s.zhCustom??[],
       pbFavs:s.pbFavs??[],pbSlow:s.pbSlow??false,fitMark:s.fitMark??true,
-      theme:s.theme??'violet',secretUnlocked:s.secretUnlocked??false};
-  }catch{return{weekStart:0,dmMsgs:[...DEFAULT_DM_MSGS],dmDensity:'normal',dmLang:'ja',dmVoice:true,dmStyle:'mix',enCustom:[],zhCustom:[],pbFavs:[],pbSlow:false,fitMark:true,theme:'violet',secretUnlocked:false}}
+      theme:s.theme??'violet',secretUnlocked:s.secretUnlocked??false,
+      bgTint:s.bgTint??'default',bgUnlocked:s.bgUnlocked??false};
+  }catch{return{weekStart:0,dmMsgs:[...DEFAULT_DM_MSGS],dmDensity:'normal',dmLang:'ja',dmVoice:true,dmStyle:'mix',enCustom:[],zhCustom:[],pbFavs:[],pbSlow:false,fitMark:true,theme:'violet',secretUnlocked:false,bgTint:'default',bgUnlocked:false}}
 }
 function saveSettings(){localStorage.setItem('fc_settings',JSON.stringify(settings))}
 let settings=loadSettings();
@@ -2336,11 +2349,12 @@ function showAch(icon,title,text,sub){
   document.getElementById('ach-text').textContent=text;
   document.getElementById('ach-sub').textContent=sub||'';
   el.classList.remove('show');void el.offsetWidth;el.classList.add('show');
-  // 中央から光が弾ける
-  burst(innerWidth/2,innerHeight*.5,30);
-  setTimeout(()=>burst(innerWidth/2,innerHeight*.5,20),180);
-  navigator.vibrate?.([25,15,35]);
-  clearTimeout(achT);achT=setTimeout(()=>el.classList.remove('show'),2900);
+  // 着地の瞬間に光が弾ける
+  setTimeout(()=>{
+    burst(innerWidth/2,innerHeight*.5,28);
+    navigator.vibrate?.([25,15,35]);
+  },420);
+  clearTimeout(achT);achT=setTimeout(()=>el.classList.remove('show'),3000);
 }
 function checkAch(){
   ACHIEVEMENTS.forEach(a=>{
@@ -3202,6 +3216,27 @@ function renderSettings(){
     b.classList.toggle('active',(b.dataset.v==='1')===settings.fitMark);
     b.onclick=()=>{settings.fitMark=b.dataset.v==='1';saveSettings();renderSettings();refreshPages()};
   });
+  // background tint (隠し要素で解放)
+  const bgSec=document.getElementById('bg-section');
+  bgSec.style.display=settings.bgUnlocked?'':'none';
+  if(settings.bgUnlocked){
+    const bgGrid=document.getElementById('bg-grid');bgGrid.innerHTML='';
+    BG_TINTS.forEach(t=>{
+      const b=document.createElement('button');
+      b.style.cssText=`
+        padding:14px 4px;border-radius:12px;cursor:pointer;font-family:inherit;
+        border:2px solid ${settings.bgTint===t.key?'#fff':'var(--border2)'};
+        background:linear-gradient(160deg,${t.bg},${t.surface2});
+        color:#e8e8ff;font-size:.62rem;font-weight:600;letter-spacing:.04em;
+        transition:transform .12s;`;
+      b.textContent=t.label;
+      b.onclick=()=>{
+        settings.bgTint=t.key;saveSettings();applyBgTint();renderSettings();
+        navigator.vibrate?.(8);
+      };
+      bgGrid.appendChild(b);
+    });
+  }
   // theme picker
   const tg=document.getElementById('theme-grid');tg.innerHTML='';
   THEMES.forEach(t=>{
@@ -3319,6 +3354,34 @@ document.getElementById('dm-add-msg').onclick=()=>{
   inputs[inputs.length-1]?.focus();
 };
 document.getElementById('dm-test-btn').onclick=()=>fireDanmaku();
+
+// ═══ 隠しコマンド③：月表示を長押し（1.2秒）→ 背景カラー解放 ═══
+(function(){
+  const md=document.getElementById('month-display');
+  let t=null;
+  md.style.cursor='pointer';
+  const start=()=>{
+    clearTimeout(t);
+    t=setTimeout(()=>{
+      t=null;
+      if(settings.bgUnlocked){
+        // 解放済みなら設定を開いてあげる
+        setOverlay.classList.add('open');renderSettings();
+        navigator.vibrate?.(10);
+        return;
+      }
+      settings.bgUnlocked=true;saveSettings();
+      showAch('🎨','SECRET UNLOCKED','背景カラー解放！','設定 → 背景カラーで変更できます');
+      fireDanmaku(8);
+      navigator.vibrate?.([30,20,30,20,60]);
+    },1200);
+  };
+  const cancel=()=>{clearTimeout(t);t=null};
+  md.addEventListener('pointerdown',start);
+  md.addEventListener('pointerup',cancel);
+  md.addEventListener('pointerleave',cancel);
+  md.addEventListener('pointercancel',cancel);
+})();
 
 // ═══════════ PARTY FAB ═══════════
 const partyFab=document.getElementById('party-fab');
@@ -3729,6 +3792,7 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catc
 
 // ═══════════ INIT ═══════════
 function init(){
+  applyBgTint();
   applyTheme();
   renderDayLabels();layout();
   document.getElementById('month-display').innerHTML=`<span class="yr">${YEAR}</span>${MJP[curMonth]}`;
