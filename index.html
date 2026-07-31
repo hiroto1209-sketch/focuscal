@@ -583,6 +583,11 @@ body.amb #bottom-filler{background:rgba(19,19,31,.9)}
 #ev-sheet.form-open #ev-form{border-top:none}
 #ev-form{padding-bottom:6px}
 @keyframes slideUp{from{transform:translateY(44px);opacity:0}to{transform:translateY(0);opacity:1}}
+#ev-header{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:2px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+#ev-header>div:first-child{flex:1;min-width:0}
 #ev-date-label{font-size:1.15rem;font-weight:700;letter-spacing:.03em;line-height:1.25}
 #ev-header-save{
   display:none;background:linear-gradient(100deg,var(--accent),var(--accent2));
@@ -943,7 +948,7 @@ textarea.form-input{resize:none;min-height:52px}
 /* ═══ FAB CLUSTER (展開式モードボタン) ═══ */
 #fab-cluster{
   position:fixed;right:14px;z-index:38;
-  display:flex;flex-direction:column-reverse;align-items:center;gap:10px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
 }
 #fab-main{
   width:54px;height:54px;border-radius:50%;border:none;
@@ -961,16 +966,16 @@ textarea.form-input{resize:none;min-height:52px}
   cursor:pointer;display:flex;align-items:center;justify-content:center;
   font-size:1.15rem;position:relative;
   box-shadow:0 3px 14px rgba(0,0,0,.45);
-  opacity:0;transform:translateY(22px) scale(.5);pointer-events:none;
+  opacity:0;transform:translateY(26px) scale(.4);pointer-events:none;
   transition:opacity .22s ease,transform .32s cubic-bezier(.34,1.5,.5,1);
 }
 #fab-cluster.open .fab-item{
   opacity:1;transform:translateY(0) scale(1);pointer-events:auto;
 }
-/* 順番にピュンと出る */
-#fab-cluster.open .fab-item:nth-child(3){transition-delay:.04s}
-#fab-cluster.open .fab-item:nth-child(2){transition-delay:.1s}
-#fab-cluster.open .fab-item:nth-child(1){transition-delay:.16s}
+/* 下から順にピュンと出る（メインボタンに近い順） */
+#fab-cluster.open .fab-item:nth-child(3){transition-delay:.03s}
+#fab-cluster.open .fab-item:nth-child(2){transition-delay:.09s}
+#fab-cluster.open .fab-item:nth-child(1){transition-delay:.15s}
 .fab-item:active{transform:scale(.86)!important}
 /* ラベル */
 .fab-label{
