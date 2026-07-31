@@ -418,7 +418,7 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
 /* ═══ BOTTOM PANELS (today focus + quick memo) ═══ */
 .bottom-panels{
   display:flex;flex-direction:column;gap:10px;margin-top:12px;
-  padding-bottom:8px;padding-right:58px; /* FABと重ならない安全域 */
+  padding-bottom:8px;
 }
 .bp-card{
   background:var(--surface);border:1px solid var(--border);border-radius:14px;
@@ -583,7 +583,16 @@ body.amb #bottom-filler{background:rgba(19,19,31,.9)}
 #ev-sheet.form-open #ev-form{border-top:none}
 #ev-form{padding-bottom:6px}
 @keyframes slideUp{from{transform:translateY(44px);opacity:0}to{transform:translateY(0);opacity:1}}
-#ev-date-label{font-size:.9rem;font-weight:600}
+#ev-date-label{font-size:1.15rem;font-weight:700;letter-spacing:.03em;line-height:1.25}
+#ev-header-save{
+  display:none;background:linear-gradient(100deg,var(--accent),var(--accent2));
+  color:#fff;border:none;border-radius:11px;
+  padding:10px 20px;font-size:.82rem;font-weight:700;cursor:pointer;
+  letter-spacing:.04em;box-shadow:0 0 16px rgba(124,92,252,.35);
+  transition:transform .1s,filter .15s;flex-shrink:0;
+}
+#ev-header-save:active{transform:scale(.94);filter:brightness(.9)}
+#ev-sheet.form-open #ev-header-save{display:block}
 #day-done-count{font-size:.62rem;color:var(--green);margin-top:2px}
 #ev-add-btn{
   background:var(--accent);color:#fff;border:none;border-radius:10px;
@@ -876,29 +885,11 @@ textarea.form-input{resize:none;min-height:52px}
 .pr-label{font-size:.52rem;color:var(--muted);letter-spacing:.08em}
 
 /* ═══ PARTY FAB ═══ */
-#party-fab{
-  position:fixed;right:14px;z-index:38;
-  width:52px;height:52px;border-radius:50%;border:none;
-  background:linear-gradient(135deg,var(--accent),var(--pink));
-  color:#fff;font-size:1.4rem;cursor:pointer;
-  box-shadow:0 4px 18px rgba(124,92,252,.45);
-  display:flex;align-items:center;justify-content:center;
-  transition:transform .12s,box-shadow .12s;
-}
-#party-fab:active{transform:scale(.88);box-shadow:0 2px 10px rgba(124,92,252,.3)}
-#party-fab.firing{animation:fabSpin .5s ease-out}
+#fab-party.firing{animation:fabSpin .5s ease-out}
 @keyframes fabSpin{50%{transform:scale(1.2) rotate(20deg)}}
 
 /* ═══ PHRASE BOOK FAB ═══ */
-#book-fab{
-  position:fixed;right:14px;z-index:38;
-  width:44px;height:44px;border-radius:50%;border:1px solid var(--border2);
-  background:var(--surface);color:var(--accent2);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 3px 14px rgba(0,0,0,.4);
-  transition:transform .12s,background .15s;
-}
-#book-fab:active{transform:scale(.88);background:var(--surface2)}
+
 
 /* ═══ PHRASE BOOK SHEET ═══ */
 #pb-overlay{display:none;position:fixed;inset:0;z-index:80;
@@ -949,20 +940,52 @@ textarea.form-input{resize:none;min-height:52px}
   padding:10px 4px 6px;text-transform:uppercase;
 }
 
-/* ═══ FITNESS FAB ═══ */
-#fit-fab{
+/* ═══ FAB CLUSTER (展開式モードボタン) ═══ */
+#fab-cluster{
   position:fixed;right:14px;z-index:38;
-  width:44px;height:44px;border-radius:50%;border:1px solid var(--border2);
-  background:var(--surface);color:#f08040;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:1.15rem;
-  box-shadow:0 3px 14px rgba(0,0,0,.4);
-  transition:transform .12s,background .15s;
+  display:flex;flex-direction:column-reverse;align-items:center;gap:10px;
 }
-#fit-fab:active{transform:scale(.88);background:var(--surface2)}
-/* 入力中はFABを控えめにして誤タップを防ぐ */
-body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
-  opacity:.25;pointer-events:none;transition:opacity .2s;
+#fab-main{
+  width:54px;height:54px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-size:1.35rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(124,92,252,.45);
+  transition:transform .28s cubic-bezier(.34,1.4,.5,1),box-shadow .2s;
 }
+#fab-main:active{transform:scale(.9)}
+#fab-cluster.open #fab-main{transform:rotate(135deg)}
+.fab-item{
+  width:46px;height:46px;border-radius:50%;
+  border:1px solid var(--border2);background:var(--surface);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;position:relative;
+  box-shadow:0 3px 14px rgba(0,0,0,.45);
+  opacity:0;transform:translateY(22px) scale(.5);pointer-events:none;
+  transition:opacity .22s ease,transform .32s cubic-bezier(.34,1.5,.5,1);
+}
+#fab-cluster.open .fab-item{
+  opacity:1;transform:translateY(0) scale(1);pointer-events:auto;
+}
+/* 順番にピュンと出る */
+#fab-cluster.open .fab-item:nth-child(3){transition-delay:.04s}
+#fab-cluster.open .fab-item:nth-child(2){transition-delay:.1s}
+#fab-cluster.open .fab-item:nth-child(1){transition-delay:.16s}
+.fab-item:active{transform:scale(.86)!important}
+/* ラベル */
+.fab-label{
+  position:absolute;right:calc(100% + 9px);top:50%;transform:translateY(-50%);
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text2);font-size:.62rem;font-weight:600;
+  padding:5px 10px;border-radius:8px;white-space:nowrap;
+  opacity:0;transition:opacity .2s;pointer-events:none;letter-spacing:.04em;
+}
+#fab-cluster.open .fab-item .fab-label{opacity:1;transition-delay:.2s}
+#fab-party{color:#ff9ad0}
+#fab-book{color:var(--accent2)}
+#fab-fit{color:#f0a050}
+/* 入力中は控えめに */
+body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
 
 /* ═══ FITNESS SHEET ═══ */
 #fit-overlay{display:none;position:fixed;inset:0;z-index:80;
@@ -1285,6 +1308,7 @@ body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
         <div id="day-done-count"></div>
       </div>
       <button id="ev-add-btn">＋ 追加</button>
+      <button id="ev-header-save">保存する</button>
     </div>
     <div id="ev-scroll">
     <div id="ev-list"></div>
@@ -1461,11 +1485,15 @@ body.typing #fit-fab,body.typing #book-fab,body.typing #party-fab{
 </div>
 
 <div id="bottom-filler"></div>
-<button id="party-fab">🎉</button>
-<button id="fit-fab" title="筋トレ記録">💪</button>
-<button id="book-fab" title="フレーズ帳">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-</button>
+<div id="fab-cluster">
+  <button class="fab-item" id="fab-fit" title="筋トレ記録">💪<span class="fab-label">筋トレ記録</span></button>
+  <button class="fab-item" id="fab-book" title="フレーズ帳">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    <span class="fab-label">フレーズ帳</span>
+  </button>
+  <button class="fab-item" id="fab-party" title="お祝い">🎉<span class="fab-label">お祝いする</span></button>
+  <button id="fab-main" title="モード">✦</button>
+</div>
 
 <!-- Phrase Book -->
 <div id="pb-overlay">
@@ -2854,7 +2882,7 @@ function str2mm(s){
 }
 document.getElementById('f-cancel').onclick=()=>{closeForm();editingIdx=null};
 function closeForm(){evForm.classList.remove('open');document.getElementById('ev-sheet').classList.remove('form-open')}
-document.getElementById('f-save').onclick=()=>{
+function doSaveEvent(){
   const title=document.getElementById('f-title').value.trim();
   if(!title){document.getElementById('f-title').focus();return}
   const{m,d}=evTarget;
@@ -2877,7 +2905,9 @@ document.getElementById('f-save').onclick=()=>{
   renderList(m,d);refreshPages();updateAll();
   const r=document.getElementById('f-save').getBoundingClientRect();
   burst(r.left+r.width/2,r.top);
-};
+}
+document.getElementById('f-save').onclick=doSaveEvent;
+document.getElementById('ev-header-save').onclick=doSaveEvent;
 
 function openEventSheet(m,d){
   evTarget={m,d};editingIdx=null;
@@ -3383,8 +3413,25 @@ document.getElementById('dm-test-btn').onclick=()=>fireDanmaku();
   md.addEventListener('pointercancel',cancel);
 })();
 
+// ═══════════ FAB CLUSTER ═══════════
+const fabCluster=document.getElementById('fab-cluster');
+const fabMain=document.getElementById('fab-main');
+function setFabOpen(open){
+  fabCluster.classList.toggle('open',open);
+  if(open)navigator.vibrate?.(8);
+}
+fabMain.onclick=e=>{e.stopPropagation();setFabOpen(!fabCluster.classList.contains('open'))};
+// 画面のどこかを触ったら閉じる
+document.addEventListener('pointerdown',e=>{
+  if(!fabCluster.contains(e.target)&&fabCluster.classList.contains('open'))setFabOpen(false);
+},true);
+// 各機能を選んだら閉じる
+['fab-fit','fab-book','fab-party'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',()=>setTimeout(()=>setFabOpen(false),120));
+});
+
 // ═══════════ PARTY FAB ═══════════
-const partyFab=document.getElementById('party-fab');
+const partyFab=document.getElementById('fab-party');
 // 隠しコマンド②：🎉を長押し → 超大狂乱（40連コメント）
 let fabPressT=null,fabLongFired=false;
 partyFab.addEventListener('pointerdown',()=>{
@@ -3415,7 +3462,7 @@ partyFab.addEventListener('pointercancel',()=>clearTimeout(fabPressT));
 // ═══════════ PHRASE BOOK ═══════════
 const pbOverlay=document.getElementById('pb-overlay');
 let pbLang='en',pbStyle='natural';
-document.getElementById('book-fab').onclick=()=>{
+document.getElementById('fab-book').onclick=()=>{
   // 現在の学習モードに合わせて開く
   if(settings.dmLang==='zh')pbLang='zh';
   else pbLang='en';
@@ -3546,7 +3593,7 @@ const saveFit=(m,logs)=>localStorage.setItem(`fc_fit_${YEAR}_${m}`,JSON.stringif
 const fitOverlay=document.getElementById('fit-overlay');
 let fitSelMuscle=null;
 
-document.getElementById('fit-fab').onclick=()=>{
+document.getElementById('fab-fit').onclick=()=>{
   fitOverlay.classList.add('open');
   document.getElementById('fit-month-label').textContent=`${MJP[todayM]}の記録`;
   closeFitForm();renderFit();
@@ -3772,9 +3819,7 @@ function layout(){
   document.querySelectorAll('.month-page').forEach(p=>p.style.paddingBottom=(ph+6)+'px');
   setDrawer(agendaOpen,false);
   document.getElementById('install-banner').style.bottom=(ph+8)+'px';
-  document.getElementById('party-fab').style.bottom=(ph+14)+'px';
-  document.getElementById('book-fab').style.bottom=(ph+14+52+10)+'px';
-  document.getElementById('fit-fab').style.bottom=(ph+14+52+10+44+10)+'px';
+  document.getElementById('fab-cluster').style.bottom=(ph+14)+'px';
 }
 
 // ═══════════ PWA ═══════════
