@@ -1678,6 +1678,7 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
         <div id="onb-task-title"></div>
       </div>
       <div class="onb-hint" id="onb-hint">↑ 左の丸をタップ</div>
+      <button class="onb-skip" id="onb-skip2">スキップ</button>
     </div>
 
     <div class="onb-step" data-step="3">
@@ -3804,15 +3805,17 @@ const onb=document.getElementById('onb');
 let onbStep=0,onbTaskTitle='';
 function onbGo(n){
   onbStep=n;
+  try{
   document.querySelectorAll('.onb-step').forEach(s=>
     s.classList.toggle('active',+s.dataset.step===n));
   document.querySelectorAll('.onb-dot').forEach((d,i)=>
     d.classList.toggle('on',i<=n));
-  if(n===1)setTimeout(()=>document.getElementById('onb-input').focus(),350);
+  if(n===1)setTimeout(()=>{try{document.getElementById('onb-input').focus()}catch(e){}},350);
+  }catch(e){}
 }
 function onbFinish(saveTask){
   onb.classList.remove('open');
-  localStorage.setItem('fc_onboarded','1');
+  try{localStorage.setItem('fc_onboarded','1')}catch(e){}
   // 体験で作った予定を今日に本当に保存する
   if(saveTask&&onbTaskTitle&&todayY===YEAR){
     try{
@@ -3831,6 +3834,7 @@ function onbFinish(saveTask){
 }
 document.getElementById('onb-next0').onclick=()=>onbGo(1);
 document.getElementById('onb-skip').onclick=()=>onbFinish(false);
+document.getElementById('onb-skip2').onclick=()=>onbGo(3);
 document.querySelectorAll('.onb-chip').forEach(c=>{
   c.onclick=()=>{
     document.getElementById('onb-input').value=c.textContent;
@@ -3853,15 +3857,17 @@ document.getElementById('onb-task-check').onclick=e=>{
   const task=document.getElementById('onb-task');
   if(task.classList.contains('done'))return;
   task.classList.add('done');
-  e.target.textContent='✓';
+  document.getElementById('onb-task-check').textContent='✓';
   document.getElementById('onb-hint').textContent='';
-  // 全部乗せの報酬！
-  const r=e.target.getBoundingClientRect();
-  burst(r.left+r.width/2,r.top+r.height/2,30);
-  playComplete();
-  fireDanmaku(6);
-  navigator.vibrate?.([18,10,30]);
-  setTimeout(()=>burst(innerWidth/2,innerHeight*.45,24),260);
+  // 演出は失敗しても進行を止めない
+  try{
+    const r=e.currentTarget.getBoundingClientRect();
+    burst(r.left+r.width/2,r.top+r.height/2,30);
+    sfxDone();
+    fireDanmaku(6);
+    navigator.vibrate?.([18,10,30]);
+    setTimeout(()=>{try{burst(innerWidth/2,innerHeight*.45,24)}catch(_){}} ,260);
+  }catch(err){}
   setTimeout(()=>onbGo(3),1500);
 };
 document.getElementById('onb-finish').onclick=()=>onbFinish(true);
