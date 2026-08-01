@@ -395,7 +395,7 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
   position:absolute;top:0;left:0;width:100%;height:100%;
   display:block;overflow:visible;
 }
-.progress-ring rect{
+.progress-ring path{
   fill:none;
   stroke:var(--accent2);
   stroke-width:2.5;
@@ -403,8 +403,8 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
   transition:stroke-dashoffset .55s cubic-bezier(.4,0,.2,1);
   filter:drop-shadow(0 0 4px var(--accent2));
 }
-/* 全完了：塗りもほのかに乗せる */
-.day-cell.done-all .progress-ring rect{stroke-width:3}
+/* 全完了：線を少し太く */
+.day-cell.done-all .progress-ring path{stroke-width:3}
 .day-cell.done-all::after{
   content:'';position:absolute;inset:0;border-radius:11px;
   background:var(--accent);opacity:.09;pointer-events:none;z-index:0;
@@ -2891,25 +2891,40 @@ function escHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':
 
 
 // セルの実寸を測って、正しい比率の角丸長方形で進捗を描く
+function roundRectPathFromTop(x,y,w,h,r){
+  // 上辺の中央から時計回りに一周する角丸長方形パス
+  r=Math.min(r,w/2,h/2);
+  const cx=x+w/2;
+  return [
+    `M ${cx} ${y}`,
+    `H ${x+w-r}`,
+    `A ${r} ${r} 0 0 1 ${x+w} ${y+r}`,
+    `V ${y+h-r}`,
+    `A ${r} ${r} 0 0 1 ${x+w-r} ${y+h}`,
+    `H ${x+r}`,
+    `A ${r} ${r} 0 0 1 ${x} ${y+h-r}`,
+    `V ${y+r}`,
+    `A ${r} ${r} 0 0 1 ${x+r} ${y}`,
+    `H ${cx}`,
+  ].join(' ');
+}
 function drawProgressRings(root){
   (root||document).querySelectorAll('.progress-ring').forEach(ring=>{
     const cell=ring.parentElement;
     if(!cell)return;
     const w=cell.offsetWidth,h=cell.offsetHeight;
-    if(!w||!h)return;
-    const sw=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ring-w'))||2.5;
-    const inset=sw/2+1;
-    const rw=w-inset*2, rh=h-inset*2, r=10;
+    if(!w||!h){setTimeout(()=>drawProgressRings(root),60);return}
+    const sw=2.5, inset=sw/2+1.5, r=10;
+    const rw=w-inset*2, rh=h-inset*2;
     if(rw<=0||rh<=0)return;
-    // 角丸長方形の周長
-    const per=2*(rw+rh)-8*r+2*Math.PI*r;
-    const pct=parseFloat(ring.dataset.pct||'0');
-    ring.innerHTML=
-      `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-         <rect x="${inset}" y="${inset}" width="${rw}" height="${rh}" rx="${r}" ry="${r}"
-               stroke-dasharray="${per}" stroke-dashoffset="${per*(1-pct)}"
-               transform="rotate(-90 ${w/2} ${h/2})"/>
-       </svg>`;
+    const d=roundRectPathFromTop(inset,inset,rw,rh,r);
+    ring.innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><path d="${d}"/></svg>`;
+    const path=ring.querySelector('path');
+    // 実際のパス長を取得（計算誤差なし）
+    const len=path.getTotalLength?path.getTotalLength():2*(rw+rh);
+    const pct=Math.max(0,Math.min(1,parseFloat(ring.dataset.pct||'0')));
+    path.style.strokeDasharray=len;
+    path.style.strokeDashoffset=len*(1-pct);
   });
 }
 addEventListener('resize',()=>drawProgressRings());
