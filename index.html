@@ -415,7 +415,51 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
 .pill.cat-other{background:#161620;color:#7070a0}
 .more-count{font-size:.4rem;color:var(--muted);text-align:center}
 
-/* ═══ BOTTOM PANELS (today focus + quick memo) ═══ */
+/* ═══ BACKUP ═══ */
+.bk-row{display:flex;gap:8px;margin-bottom:9px}
+.bk-btn{
+  flex:1;padding:13px 8px;border-radius:11px;border:1px solid var(--border2);
+  background:var(--surface2);color:var(--text);font-size:.76rem;font-weight:600;
+  font-family:inherit;cursor:pointer;transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.bk-btn:active{transform:scale(.96);background:var(--surface3)}
+.bk-btn .bk-ic{font-size:1.1rem}
+.bk-btn.primary{
+  background:linear-gradient(100deg,var(--accent),var(--accent2));
+  border-color:transparent;color:#fff;
+}
+.bk-note{
+  font-size:.62rem;color:var(--muted);line-height:1.7;margin-top:4px;
+}
+.bk-note b{color:var(--text2)}
+#bk-status{
+  font-size:.68rem;text-align:center;min-height:18px;margin-top:8px;
+  color:var(--green);letter-spacing:.03em;
+}
+#bk-status.err{color:var(--red)}
+#bk-last{font-size:.6rem;color:var(--muted);text-align:center;margin-top:4px}
+/* 復元確認モーダル */
+#bk-confirm{
+  display:none;position:fixed;inset:0;z-index:90;
+  background:rgba(0,0,0,.8);align-items:center;justify-content:center;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+}
+#bk-confirm.open{display:flex}
+#bk-confirm-card{
+  background:var(--surface);border:1px solid var(--border2);border-radius:20px;
+  padding:22px 20px 18px;width:min(310px,88vw);text-align:center;
+  animation:popIn .18s ease-out;
+}
+#bk-confirm-card h3{font-size:.92rem;font-weight:700;margin-bottom:10px}
+#bk-confirm-card p{font-size:.74rem;color:var(--text2);line-height:1.7;margin-bottom:16px}
+#bk-confirm-card .warn{color:var(--gold);font-size:.7rem;margin-bottom:14px}
+.bk-c-btn{
+  width:100%;padding:12px;border-radius:11px;border:none;
+  font-size:.82rem;font-weight:600;font-family:inherit;cursor:pointer;
+}
+#bk-do-restore{background:var(--accent);color:#fff;margin-bottom:7px}
+#bk-cancel-restore{background:var(--surface2);color:var(--muted);border:1px solid var(--border2)}
 .bottom-panels{
   display:flex;flex-direction:column;gap:10px;margin-top:12px;
   padding-bottom:8px;
@@ -1401,6 +1445,24 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
     <div class="settings-title">⚙ 設定</div>
     <div id="settings-scroll">
     <div class="settings-section">
+      <div class="settings-section-label">💾 データのバックアップ</div>
+      <div class="bk-row">
+        <button class="bk-btn primary" id="bk-export">
+          <span class="bk-ic">⬇</span>バックアップを保存
+        </button>
+        <button class="bk-btn" id="bk-import">
+          <span class="bk-ic">⬆</span>復元する
+        </button>
+      </div>
+      <input type="file" id="bk-file" accept=".json,application/json" style="display:none">
+      <div id="bk-status"></div>
+      <div id="bk-last"></div>
+      <div class="bk-note">
+        予定・筋トレ記録・メモ・設定を<b>1つのファイル</b>にまとめて保存します。
+        機種変更やブラウザのデータ消去に備えて、月に一度は保存しておくと安心です。
+      </div>
+    </div>
+    <div class="settings-section">
       <div class="settings-section-label">週の始まり</div>
       <div class="seg-control" id="week-start-ctrl">
         <button class="seg-btn" data-v="0">日曜始まり</button>
@@ -1468,6 +1530,16 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
       </div>
     </div>
     </div>
+  </div>
+</div>
+
+<div id="bk-confirm">
+  <div id="bk-confirm-card">
+    <h3>データを復元しますか？</h3>
+    <p id="bk-confirm-detail"></p>
+    <div class="warn">⚠️ 現在のデータはすべて上書きされます</div>
+    <button class="bk-c-btn" id="bk-do-restore">復元する</button>
+    <button class="bk-c-btn" id="bk-cancel-restore">キャンセル</button>
   </div>
 </div>
 
@@ -3243,6 +3315,7 @@ setOverlay.onclick=e=>{if(e.target===setOverlay)setOverlay.classList.remove('ope
 document.getElementById('settings-sheet').onclick=e=>e.stopPropagation();
 
 function renderSettings(){
+  updateBkLast();
   document.querySelectorAll('#week-start-ctrl .seg-btn').forEach(b=>{
     b.classList.toggle('active',+b.dataset.v===settings.weekStart);
     b.onclick=()=>{settings.weekStart=+b.dataset.v;saveSettings();renderSettings();renderDayLabels();refreshPages()};
@@ -3417,6 +3490,144 @@ document.getElementById('dm-test-btn').onclick=()=>fireDanmaku();
   md.addEventListener('pointerleave',cancel);
   md.addEventListener('pointercancel',cancel);
 })();
+
+// ═══════════ BACKUP / RESTORE ═══════════
+const BK_VERSION=1;
+function collectAllData(){
+  const data={
+    app:'FocusCal',version:BK_VERSION,year:YEAR,
+    exportedAt:new Date().toISOString(),
+    settings:JSON.parse(localStorage.getItem('fc_settings')||'null'),
+    stats:JSON.parse(localStorage.getItem('fc_stats')||'null'),
+    memos:JSON.parse(localStorage.getItem('fc_memos')||'null'),
+    months:{},fitness:{},
+  };
+  for(let m=0;m<12;m++){
+    const mo=localStorage.getItem(`fc_${YEAR}_${m}`);
+    if(mo)data.months[m]=JSON.parse(mo);
+    const fit=localStorage.getItem(`fc_fit_${YEAR}_${m}`);
+    if(fit)data.fitness[m]=JSON.parse(fit);
+  }
+  return data;
+}
+function countData(d){
+  let events=0,fits=0;
+  Object.values(d.months||{}).forEach(mo=>{
+    Object.values(mo||{}).forEach(day=>{events+=(day.events||[]).length});
+  });
+  Object.values(d.fitness||{}).forEach(logs=>{fits+=(logs||[]).length});
+  return{events,fits,memos:(d.memos||[]).length};
+}
+function bkStatus(msg,isErr){
+  const el=document.getElementById('bk-status');
+  el.textContent=msg;el.classList.toggle('err',!!isErr);
+  clearTimeout(bkStatus._t);
+  bkStatus._t=setTimeout(()=>{el.textContent=''},4000);
+}
+function updateBkLast(){
+  const t=localStorage.getItem('fc_last_backup');
+  const el=document.getElementById('bk-last');
+  if(!el)return;
+  if(t){
+    const d=new Date(t);
+    el.textContent=`最終バックアップ：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }else{
+    el.textContent='まだバックアップしていません';
+  }
+}
+
+document.getElementById('bk-export').onclick=()=>{
+  try{
+    const data=collectAllData();
+    const c=countData(data);
+    const json=JSON.stringify(data,null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const d=new Date();
+    const name=`focuscal-backup-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+    // iOS Safari も含めて確実に保存できるようにする
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=name;
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url)},1500);
+    localStorage.setItem('fc_last_backup',new Date().toISOString());
+    updateBkLast();
+    bkStatus(`✓ 保存しました（予定${c.events}件・筋トレ${c.fits}件）`);
+    burst(innerWidth/2,innerHeight*.4,18);
+    navigator.vibrate?.([12,8,20]);
+  }catch(e){
+    bkStatus('保存に失敗しました',true);
+  }
+};
+
+document.getElementById('bk-import').onclick=()=>{
+  document.getElementById('bk-file').click();
+};
+let pendingRestore=null;
+document.getElementById('bk-file').onchange=e=>{
+  const file=e.target.files?.[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(data.app!=='FocusCal')throw new Error('not focuscal');
+      pendingRestore=data;
+      const c=countData(data);
+      const dt=data.exportedAt?new Date(data.exportedAt):null;
+      document.getElementById('bk-confirm-detail').innerHTML=
+        `予定 <b>${c.events}</b>件 ／ 筋トレ <b>${c.fits}</b>件 ／ メモ <b>${c.memos}</b>件`+
+        (dt?`<br><span style="font-size:.66rem;color:var(--muted)">${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()} のバックアップ</span>`:'');
+      document.getElementById('bk-confirm').classList.add('open');
+    }catch(err){
+      bkStatus('このファイルは読み込めません',true);
+    }
+    e.target.value='';
+  };
+  reader.onerror=()=>{bkStatus('ファイルの読み込みに失敗しました',true);e.target.value=''};
+  reader.readAsText(file);
+};
+
+document.getElementById('bk-cancel-restore').onclick=()=>{
+  document.getElementById('bk-confirm').classList.remove('open');
+  pendingRestore=null;
+};
+document.getElementById('bk-confirm').onclick=e=>{
+  if(e.target.id==='bk-confirm'){
+    document.getElementById('bk-confirm').classList.remove('open');pendingRestore=null;
+  }
+};
+document.getElementById('bk-do-restore').onclick=()=>{
+  if(!pendingRestore)return;
+  const d=pendingRestore;
+  try{
+    // 既存の該当キーを消してから書き戻す
+    for(let m=0;m<12;m++){
+      localStorage.removeItem(`fc_${YEAR}_${m}`);
+      localStorage.removeItem(`fc_fit_${YEAR}_${m}`);
+    }
+    Object.entries(d.months||{}).forEach(([m,v])=>
+      localStorage.setItem(`fc_${YEAR}_${m}`,JSON.stringify(v)));
+    Object.entries(d.fitness||{}).forEach(([m,v])=>
+      localStorage.setItem(`fc_fit_${YEAR}_${m}`,JSON.stringify(v)));
+    if(d.settings)localStorage.setItem('fc_settings',JSON.stringify(d.settings));
+    if(d.stats)localStorage.setItem('fc_stats',JSON.stringify(d.stats));
+    if(d.memos)localStorage.setItem('fc_memos',JSON.stringify(d.memos));
+    // メモリ上の状態も更新
+    settings=loadSettings();stats=loadStats();
+    applyBgTint();applyTheme();renderDayLabels();
+    refreshPages();updateAll();renderSettings();
+    undoStack.length=0;redoStack.length=0;updateUndoBtn();
+    document.getElementById('bk-confirm').classList.remove('open');
+    pendingRestore=null;
+    const c=countData(d);
+    bkStatus(`✓ 復元しました（予定${c.events}件）`);
+    showAch('💾','RESTORED','データを復元しました','すべて元通りです');
+    fireDanmaku(4);
+  }catch(e){
+    bkStatus('復元に失敗しました',true);
+  }
+};
 
 // ═══════════ FAB CLUSTER ═══════════
 const fabCluster=document.getElementById('fab-cluster');
@@ -3844,6 +4055,20 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catc
 function init(){
   applyBgTint();
   applyTheme();
+  // バックアップ督促：30日以上経過 or 未実施でデータがある場合に設定ボタンへ印
+  try{
+    const last=localStorage.getItem('fc_last_backup');
+    const c=countData(collectAllData());
+    const hasData=c.events>0||c.fits>0;
+    const overdue=!last||(Date.now()-new Date(last).getTime())>30*86400000;
+    if(hasData&&overdue){
+      const sb=document.getElementById('settings-btn');
+      sb.style.position='relative';
+      const dot=document.createElement('span');
+      dot.style.cssText='position:absolute;top:1px;right:1px;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)';
+      sb.appendChild(dot);
+    }
+  }catch(e){}
   renderDayLabels();layout();
   document.getElementById('month-display').innerHTML=`<span class="yr">${YEAR}</span>${MJP[curMonth]}`;
   setPos(-W(),false);updateDots();refreshPages();updateAll();
