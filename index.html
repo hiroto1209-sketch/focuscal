@@ -366,8 +366,8 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
 
 .day-cell.done-all::before{
   content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,transparent 40%,rgba(66,217,132,.07) 60%,transparent 80%);
-  animation:shimmer 2.5s infinite;pointer-events:none;
+  background:linear-gradient(135deg,transparent 40%,var(--accent2) 60%,transparent 80%);
+  opacity:.09;animation:shimmer 2.5s infinite;pointer-events:none;z-index:0;
 }
 @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(220%)}}
 
@@ -383,12 +383,31 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
 .day-cell.colored .date-n{color:#ddd;font-weight:600}
 .day-cell.sun .date-n{color:#b04040}
 .day-cell.sat .date-n{color:#4070b0}
-.day-cell.done-all .date-n{color:var(--green)!important}
+.day-cell.done-all .date-n{color:var(--accent2)!important}
 .day-cell.today .date-n{color:#fff!important}
 
+/* 進捗：セル枠に沿って伸びる線（テーマカラー） */
 .progress-ring{
-  position:absolute;inset:-2px;border-radius:50%;z-index:0;
-  background:conic-gradient(var(--green) 0deg,transparent 0deg);
+  position:absolute;inset:0;z-index:0;pointer-events:none;
+  border-radius:11px;overflow:visible;
+}
+.progress-ring svg{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:block;overflow:visible;
+}
+.progress-ring rect{
+  fill:none;
+  stroke:var(--accent2);
+  stroke-width:2.5;
+  stroke-linecap:round;
+  transition:stroke-dashoffset .55s cubic-bezier(.4,0,.2,1);
+  filter:drop-shadow(0 0 4px var(--accent2));
+}
+/* 全完了：塗りもほのかに乗せる */
+.day-cell.done-all .progress-ring rect{stroke-width:3}
+.day-cell.done-all::after{
+  content:'';position:absolute;inset:0;border-radius:11px;
+  background:var(--accent);opacity:.09;pointer-events:none;z-index:0;
 }
 .date-n>span{position:relative;z-index:1}
 
@@ -2717,9 +2736,12 @@ function buildGrid(pageEl,m){
     }
     const evs=dd.events||[],total=evs.length,done=evs.filter(e=>e.done).length;
     if(total>0&&done===total)cell.classList.add('done-all');
-    const ring=document.createElement('div');ring.className='progress-ring';
-    ring.style.background=`conic-gradient(#42d984 ${total?done/total*360:0}deg,transparent 0deg)`;
-    cell.appendChild(ring);
+    if(total>0){
+      const ring=document.createElement('div');
+      ring.className='progress-ring';
+      ring.dataset.pct=(done/total).toFixed(4);
+      cell.appendChild(ring);
+    }
     const num=document.createElement('div');num.className='date-n';
     const sp=document.createElement('span');sp.textContent=d;num.appendChild(sp);
     cell.appendChild(num);
@@ -2740,6 +2762,7 @@ function buildGrid(pageEl,m){
   }
   pageEl.innerHTML='';pageEl.appendChild(grid);
   attachCell(grid,m);
+  requestAnimationFrame(()=>drawProgressRings(grid));
   pageEl.appendChild(buildBottomPanels());
 }
 
@@ -2865,6 +2888,31 @@ function buildQuickMemo(){
   return card;
 }
 function escHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+
+// セルの実寸を測って、正しい比率の角丸長方形で進捗を描く
+function drawProgressRings(root){
+  (root||document).querySelectorAll('.progress-ring').forEach(ring=>{
+    const cell=ring.parentElement;
+    if(!cell)return;
+    const w=cell.offsetWidth,h=cell.offsetHeight;
+    if(!w||!h)return;
+    const sw=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ring-w'))||2.5;
+    const inset=sw/2+1;
+    const rw=w-inset*2, rh=h-inset*2, r=10;
+    if(rw<=0||rh<=0)return;
+    // 角丸長方形の周長
+    const per=2*(rw+rh)-8*r+2*Math.PI*r;
+    const pct=parseFloat(ring.dataset.pct||'0');
+    ring.innerHTML=
+      `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+         <rect x="${inset}" y="${inset}" width="${rw}" height="${rh}" rx="${r}" ry="${r}"
+               stroke-dasharray="${per}" stroke-dashoffset="${per*(1-pct)}"
+               transform="rotate(-90 ${w/2} ${h/2})"/>
+       </svg>`;
+  });
+}
+addEventListener('resize',()=>drawProgressRings());
 
 // ═══════════ CELL INTERACTIONS ═══════════
 const LONG_MS=460;let pressT=null,pressEl=null;
