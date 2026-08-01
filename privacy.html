@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09090f">
+<title>FocusCal プライバシーポリシー</title>
+<style>
+:root{
+  --bg:#09090f;--surface:#13131f;--border:#22223a;--border2:#2c2c46;
+  --text:#eeeeff;--text2:#a8a8cc;--muted:#5a5a80;
+  --accent:#7c5cfc;--accent2:#a78bfa;--green:#42d984;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Hiragino Sans','Yu Gothic UI','Noto Sans JP',sans-serif;
+  line-height:1.9;padding-bottom:50px;
+}
+header{
+  padding:calc(env(safe-area-inset-top) + 46px) 22px 36px;text-align:center;
+  background:radial-gradient(ellipse 90% 60% at 50% 20%,#171038 0%,var(--bg) 72%);
+  border-bottom:1px solid var(--border);
+}
+.eyebrow{font-size:.6rem;letter-spacing:.32em;color:var(--accent2);margin-bottom:14px}
+h1{font-size:1.4rem;font-weight:800;letter-spacing:.05em;margin-bottom:10px}
+.updated{font-size:.66rem;color:var(--muted);letter-spacing:.06em}
+main{max-width:620px;margin:0 auto;padding:0 20px}
+.hero-box{
+  background:linear-gradient(135deg,#0f2018,#0d1428);
+  border:1px solid var(--green);border-radius:16px;
+  padding:20px;margin:28px 0;text-align:center;
+}
+.hero-box .big{font-size:1.05rem;font-weight:700;color:var(--green);margin-bottom:8px}
+.hero-box p{font-size:.78rem;color:var(--text2)}
+section{padding:22px 0;border-bottom:1px solid var(--border)}
+section:last-of-type{border-bottom:none}
+h2{font-size:.95rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+h2 .num{
+  font-size:.6rem;color:var(--accent2);letter-spacing:.14em;
+  border:1px solid var(--border2);border-radius:6px;padding:2px 7px;
+}
+p{font-size:.8rem;color:var(--text2);margin-bottom:8px}
+ul{list-style:none;margin:8px 0}
+li{font-size:.78rem;color:var(--text2);padding-left:17px;position:relative;margin-bottom:5px}
+li::before{
+  content:'';position:absolute;left:2px;top:.72em;width:5px;height:5px;
+  border-radius:50%;background:var(--accent);
+}
+li.no::before{background:var(--muted)}
+strong{color:var(--text)}
+.note{
+  background:var(--surface);border:1px solid var(--border2);border-radius:12px;
+  padding:14px 16px;margin-top:12px;font-size:.74rem;color:var(--text2);
+}
+footer{
+  text-align:center;padding:40px 20px 20px;
+  font-size:.64rem;color:var(--muted);letter-spacing:.08em;
+}
+.back{
+  display:block;text-align:center;margin:30px 0 0;
+  background:linear-gradient(100deg,var(--accent),#f060a8);
+  color:#fff;text-decoration:none;font-weight:700;font-size:.84rem;
+  padding:14px;border-radius:13px;letter-spacing:.06em;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">PRIVACY POLICY</div>
+  <h1>プライバシーポリシー</h1>
+  <div class="updated">最終更新日：2026年8月1日</div>
+</header>
+
+<main>
+
+<div class="hero-box">
+  <div class="big">🔒 あなたのデータは、あなたの端末の中だけ</div>
+  <p>FocusCalは、入力された情報を一切外部に送信しません。<br>サーバーもデータベースも持っていません。</p>
+</div>
+
+<section>
+  <h2><span class="num">01</span>収集する情報</h2>
+  <p><strong>FocusCalは、個人情報を一切収集しません。</strong></p>
+  <p>アプリ内で入力された以下のデータは、すべてお使いの端末のブラウザ内（localStorage）にのみ保存されます。</p>
+  <ul>
+    <li>予定のタイトル・時間・カテゴリ・メモ</li>
+    <li>筋トレの記録（部位・種目・セット数など）</li>
+    <li>クイックメモの内容</li>
+    <li>テーマや言語などの設定</li>
+    <li>達成回数や連続日数などの記録</li>
+  </ul>
+  <div class="note">
+    これらは開発者を含む第三者が閲覧することは一切できません。通信も発生しません。
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">02</span>収集しないもの</h2>
+  <ul>
+    <li class="no">氏名・メールアドレス・電話番号などの個人情報</li>
+    <li class="no">位置情報</li>
+    <li class="no">連絡先・写真・カレンダーなど端末内の他データ</li>
+    <li class="no">IPアドレスや端末識別子</li>
+    <li class="no">利用状況の分析データ（アクセス解析ツールは導入していません）</li>
+  </ul>
+  <p>アカウント登録もログインも不要です。</p>
+</section>
+
+<section>
+  <h2><span class="num">03</span>第三者への提供</h2>
+  <p>データを外部に送信していないため、<strong>第三者に提供することはありません。</strong>広告の配信も行っていません。</p>
+</section>
+
+<section>
+  <h2><span class="num">04</span>音声読み上げ機能について</h2>
+  <p>語学モードの音声読み上げには、お使いの端末に標準搭載されている音声合成機能（Web Speech API）を使用しています。</p>
+  <p>読み上げるテキストはアプリ内にあらかじめ用意された定型フレーズ、またはご自身で追加したフレーズのみです。予定の内容が読み上げられたり、外部に送られることはありません。</p>
+</section>
+
+<section>
+  <h2><span class="num">05</span>データの管理と削除</h2>
+  <p>データはお使いのブラウザに保存されているため、以下の場合に消去されます。</p>
+  <ul>
+    <li>ブラウザの履歴・サイトデータを削除したとき</li>
+    <li>アプリをホーム画面から削除したとき（環境による）</li>
+    <li>長期間使用せず、ブラウザが自動的に整理したとき</li>
+  </ul>
+  <div class="note">
+    <strong>大切なデータは、設定（⚙）の「バックアップを保存」から定期的に書き出しておくことを強くおすすめします。</strong>
+    書き出したファイルもお使いの端末に保存され、外部には送信されません。
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">06</span>お子様の利用について</h2>
+  <p>本アプリは個人情報を収集しないため、年齢を問わず安心してご利用いただけます。</p>
+</section>
+
+<section>
+  <h2><span class="num">07</span>ホスティングについて</h2>
+  <p>本アプリはGitHub Pagesを利用して配信されています。ページへのアクセス時、ホスティング事業者側で一般的なアクセスログ（IPアドレス等）が記録される場合がありますが、これは開発者が取得・閲覧できるものではありません。</p>
+</section>
+
+<section>
+  <h2><span class="num">08</span>本ポリシーの変更</h2>
+  <p>本ポリシーを変更する場合は、このページの内容を更新し、最終更新日を改めます。</p>
+</section>
+
+<section>
+  <h2><span class="num">09</span>お問い合わせ</h2>
+  <p>本アプリやプライバシーに関するご質問は、配布元までお問い合わせください。</p>
+</section>
+
+<a class="back" href="./index.html">カレンダーに戻る →</a>
+
+</main>
+
+<footer>FocusCal — あなたのデータは、あなたのものです</footer>
+
+</body>
+</html>

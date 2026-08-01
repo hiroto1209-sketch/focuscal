@@ -415,7 +415,100 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
 .pill.cat-other{background:#161620;color:#7070a0}
 .more-count{font-size:.4rem;color:var(--muted);text-align:center}
 
-/* ═══ BACKUP ═══ */
+/* ═══════════════════════════════════════════
+   ONBOARDING (初回起動ツアー)
+═══════════════════════════════════════════ */
+#onb{
+  display:none;position:fixed;inset:0;z-index:400;
+  background:radial-gradient(ellipse 90% 60% at 50% 30%,#1a1040 0%,#08080f 72%);
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:28px 24px calc(env(safe-area-inset-bottom) + 24px);
+  text-align:center;overflow:hidden;
+}
+#onb.open{display:flex}
+#onb-inner{position:relative;z-index:2;max-width:400px;width:100%}
+.onb-step{display:none;animation:onbIn .45s cubic-bezier(.3,1.2,.4,1)}
+.onb-step.active{display:block}
+@keyframes onbIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+.onb-ic{
+  font-size:3.2rem;line-height:1;margin-bottom:18px;
+  filter:drop-shadow(0 0 22px rgba(167,139,250,.55));
+  animation:onbFloat 3s ease-in-out infinite;
+}
+@keyframes onbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.onb-eyebrow{
+  font-size:.6rem;letter-spacing:.3em;color:var(--accent2);margin-bottom:12px;
+}
+.onb-title{
+  font-size:1.5rem;font-weight:800;line-height:1.45;margin-bottom:14px;letter-spacing:.02em;
+}
+.onb-title .g{
+  background:linear-gradient(100deg,var(--accent2),#ff90d8);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.onb-lead{font-size:.84rem;color:var(--text2);line-height:1.9;margin-bottom:26px}
+.onb-btn{
+  width:100%;padding:16px;border-radius:14px;border:none;
+  background:linear-gradient(100deg,var(--accent),#f060a8);
+  color:#fff;font-size:.95rem;font-weight:700;font-family:inherit;
+  cursor:pointer;letter-spacing:.06em;
+  box-shadow:0 0 28px rgba(124,92,252,.35);
+  transition:transform .12s;
+}
+.onb-btn:active{transform:scale(.97)}
+.onb-skip{
+  background:none;border:none;color:var(--muted);font-size:.72rem;
+  font-family:inherit;cursor:pointer;padding:14px;margin-top:4px;letter-spacing:.06em;
+}
+/* 体験用の入力欄 */
+#onb-input{
+  width:100%;background:rgba(20,20,32,.9);border:1.5px solid var(--accent);
+  border-radius:13px;color:var(--text);font-family:inherit;font-size:.95rem;
+  padding:15px 16px;outline:none;margin-bottom:14px;text-align:center;
+  user-select:text;-webkit-user-select:text;
+}
+#onb-input::placeholder{color:var(--muted)}
+.onb-chips{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.onb-chip{
+  padding:7px 14px;border-radius:20px;border:1px solid var(--border2);
+  background:var(--surface);color:var(--text2);font-size:.72rem;
+  font-family:inherit;cursor:pointer;transition:all .15s;
+}
+.onb-chip:active{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* 体験用の予定カード */
+#onb-task{
+  background:var(--surface);border:1px solid var(--border2);border-radius:15px;
+  padding:15px;display:flex;align-items:center;gap:12px;margin-bottom:22px;
+  text-align:left;
+}
+#onb-task.done{border-color:var(--green);opacity:.6}
+#onb-task-check{
+  width:36px;height:36px;border-radius:50%;border:2px solid var(--border2);
+  background:transparent;color:var(--muted);font-size:1rem;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all .2s;animation:onbPulse 1.8s ease-in-out infinite;
+}
+@keyframes onbPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(124,92,252,.5)}
+  70%{box-shadow:0 0 0 12px rgba(124,92,252,0)}
+}
+#onb-task.done #onb-task-check{
+  background:var(--green);border-color:var(--green);color:#000;
+  font-weight:700;animation:none;
+}
+#onb-task-title{font-size:.88rem;font-weight:600;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#onb-task.done #onb-task-title{text-decoration:line-through}
+.onb-hint{font-size:.7rem;color:var(--gold);margin-bottom:18px;letter-spacing:.04em}
+/* 進捗ドット */
+#onb-dots{display:flex;gap:7px;justify-content:center;margin-top:22px}
+.onb-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);transition:all .3s}
+.onb-dot.on{background:var(--accent);transform:scale(1.4)}
+/* プライバシー一言 */
+.onb-privacy{
+  font-size:.66rem;color:var(--muted);margin-top:16px;line-height:1.8;
+}
+.onb-privacy a{color:var(--accent2);text-decoration:none;border-bottom:1px solid var(--accent2)}
 .bk-row{display:flex;gap:8px;margin-bottom:9px}
 .bk-btn{
   flex:1;padding:13px 8px;border-radius:11px;border:1px solid var(--border2);
@@ -1445,6 +1538,14 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
     <div class="settings-title">⚙ 設定</div>
     <div id="settings-scroll">
     <div class="settings-section">
+      <div class="settings-section-label">はじめかた・プライバシー</div>
+      <div class="bk-row">
+        <button class="bk-btn" id="onb-replay"><span class="bk-ic">🎬</span>チュートリアル</button>
+        <a class="bk-btn" href="./guide.html" style="text-decoration:none"><span class="bk-ic">📖</span>使い方ガイド</a>
+        <a class="bk-btn" href="./privacy.html" style="text-decoration:none"><span class="bk-ic">🔒</span>プライバシー</a>
+      </div>
+    </div>
+    <div class="settings-section">
       <div class="settings-section-label">💾 データのバックアップ</div>
       <div class="bk-row">
         <button class="bk-btn primary" id="bk-export">
@@ -1529,6 +1630,75 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
         <button class="seg-btn" data-v="frenzy">🌋 大狂乱</button>
       </div>
     </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ONBOARDING ═══ -->
+<div id="onb">
+  <div id="onb-inner">
+
+    <div class="onb-step active" data-step="0">
+      <div class="onb-ic">🎉</div>
+      <div class="onb-eyebrow">WELCOME TO FOCUSCAL</div>
+      <div class="onb-title">予定を終わらせると、<br><span class="g">画面がお祝いします。</span></div>
+      <div class="onb-lead">
+        「続かない」を、楽しさで解決するカレンダー。<br>
+        まずは60秒だけ、体験してみてください。
+      </div>
+      <button class="onb-btn" id="onb-next0">はじめる →</button>
+      <button class="onb-skip" id="onb-skip">スキップして使う</button>
+      <div class="onb-privacy">
+        入力したデータは端末内にのみ保存され、外部には送信されません。<br>
+        <a href="./privacy.html">プライバシーポリシー</a>
+      </div>
+    </div>
+
+    <div class="onb-step" data-step="1">
+      <div class="onb-ic">✍️</div>
+      <div class="onb-eyebrow">STEP 1 / 2</div>
+      <div class="onb-title">やることを<br><span class="g">ひとつ</span>だけ書いてみて</div>
+      <div class="onb-lead">なんでもOKです。小さいほどいい。</div>
+      <input id="onb-input" type="text" placeholder="例：水を1杯のむ" maxlength="30">
+      <div class="onb-chips">
+        <button class="onb-chip">水を1杯のむ</button>
+        <button class="onb-chip">机の上を片づける</button>
+        <button class="onb-chip">3分だけ歩く</button>
+      </div>
+      <button class="onb-btn" id="onb-next1">これにする →</button>
+    </div>
+
+    <div class="onb-step" data-step="2">
+      <div class="onb-ic">👇</div>
+      <div class="onb-eyebrow">STEP 2 / 2</div>
+      <div class="onb-title">丸を押して、<br><span class="g">完了</span>させてみて</div>
+      <div class="onb-lead">これがこのアプリの、いちばん大事な瞬間です。</div>
+      <div id="onb-task">
+        <button id="onb-task-check">○</button>
+        <div id="onb-task-title"></div>
+      </div>
+      <div class="onb-hint" id="onb-hint">↑ 左の丸をタップ</div>
+    </div>
+
+    <div class="onb-step" data-step="3">
+      <div class="onb-ic">🚀</div>
+      <div class="onb-eyebrow">READY</div>
+      <div class="onb-title">これが<span class="g">FocusCal</span>です</div>
+      <div class="onb-lead">
+        カレンダーの日付をタップすれば、いつでも予定を追加できます。<br>
+        右下の「✦」からは、語学フレーズ帳や筋トレ記録も。
+      </div>
+      <button class="onb-btn" id="onb-finish">つかいはじめる 🎉</button>
+      <div class="onb-privacy">
+        設定（⚙）からテーマの変更やバックアップができます。
+      </div>
+    </div>
+
+    <div id="onb-dots">
+      <div class="onb-dot on"></div>
+      <div class="onb-dot"></div>
+      <div class="onb-dot"></div>
+      <div class="onb-dot"></div>
     </div>
   </div>
 </div>
@@ -3629,6 +3799,90 @@ document.getElementById('bk-do-restore').onclick=()=>{
   }
 };
 
+// ═══════════ ONBOARDING ═══════════
+const onb=document.getElementById('onb');
+let onbStep=0,onbTaskTitle='';
+function onbGo(n){
+  onbStep=n;
+  document.querySelectorAll('.onb-step').forEach(s=>
+    s.classList.toggle('active',+s.dataset.step===n));
+  document.querySelectorAll('.onb-dot').forEach((d,i)=>
+    d.classList.toggle('on',i<=n));
+  if(n===1)setTimeout(()=>document.getElementById('onb-input').focus(),350);
+}
+function onbFinish(saveTask){
+  onb.classList.remove('open');
+  localStorage.setItem('fc_onboarded','1');
+  // 体験で作った予定を今日に本当に保存する
+  if(saveTask&&onbTaskTitle&&todayY===YEAR){
+    try{
+      const md=loadMonth(todayM);
+      const dd=dayData(md,todayD);
+      dd.events.push({
+        id:Date.now(),title:onbTaskTitle,cat:'personal',pri:'med',
+        allday:true,start:'',end:'',memo:'',done:true,
+      });
+      saveMonth(todayM,md);
+      stats.totalDone++;saveStats();
+      updateStreak();
+      refreshPages();updateAll();
+    }catch(e){}
+  }
+}
+document.getElementById('onb-next0').onclick=()=>onbGo(1);
+document.getElementById('onb-skip').onclick=()=>onbFinish(false);
+document.querySelectorAll('.onb-chip').forEach(c=>{
+  c.onclick=()=>{
+    document.getElementById('onb-input').value=c.textContent;
+    navigator.vibrate?.(6);
+  };
+});
+document.getElementById('onb-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter')document.getElementById('onb-next1').click();
+});
+document.getElementById('onb-next1').onclick=()=>{
+  const v=document.getElementById('onb-input').value.trim()||'水を1杯のむ';
+  onbTaskTitle=v;
+  document.getElementById('onb-task-title').textContent=v;
+  document.getElementById('onb-task').classList.remove('done');
+  document.getElementById('onb-task-check').textContent='○';
+  document.getElementById('onb-hint').textContent='↑ 左の丸をタップ';
+  onbGo(2);
+};
+document.getElementById('onb-task-check').onclick=e=>{
+  const task=document.getElementById('onb-task');
+  if(task.classList.contains('done'))return;
+  task.classList.add('done');
+  e.target.textContent='✓';
+  document.getElementById('onb-hint').textContent='';
+  // 全部乗せの報酬！
+  const r=e.target.getBoundingClientRect();
+  burst(r.left+r.width/2,r.top+r.height/2,30);
+  playComplete();
+  fireDanmaku(6);
+  navigator.vibrate?.([18,10,30]);
+  setTimeout(()=>burst(innerWidth/2,innerHeight*.45,24),260);
+  setTimeout(()=>onbGo(3),1500);
+};
+document.getElementById('onb-finish').onclick=()=>onbFinish(true);
+
+document.getElementById('onb-replay').onclick=()=>{
+  setOverlay.classList.remove('open');
+  onbTaskTitle='';
+  document.getElementById('onb-input').value='';
+  onb.classList.add('open');onbGo(0);
+};
+function maybeShowOnboarding(){
+  if(localStorage.getItem('fc_onboarded'))return;
+  // 既にデータがある人には出さない
+  try{
+    const c=countData(collectAllData());
+    if(c.events>0||c.fits>0){localStorage.setItem('fc_onboarded','1');return;}
+  }catch(e){}
+  onb.classList.add('open');
+  onbGo(0);
+}
+
 // ═══════════ FAB CLUSTER ═══════════
 const fabCluster=document.getElementById('fab-cluster');
 const fabMain=document.getElementById('fab-main');
@@ -4073,6 +4327,7 @@ function init(){
   document.getElementById('month-display').innerHTML=`<span class="yr">${YEAR}</span>${MJP[curMonth]}`;
   setPos(-W(),false);updateDots();refreshPages();updateAll();
   checkAch();renderSlider();updateUndoBtn();
+  maybeShowOnboarding();
 }
 requestAnimationFrame(()=>requestAnimationFrame(init));
 addEventListener('resize',()=>{layout();setPos(-W(),false)});
