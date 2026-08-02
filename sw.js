@@ -1,5 +1,5 @@
-const CACHE = 'focuscal-v36';
-const ASSETS = ['./index.html','./guide.html','./privacy.html','./manifest.json','./icon-192.png','./icon-512.png'];
+const CACHE = 'focuscal-v37';
+const ASSETS = ['./index.html','./guide.html','./privacy.html','./demo.html','./manifest.json','./icon-192.png','./icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
   self.skipWaiting();

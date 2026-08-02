@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#08080f">
+<title>FocusCal</title>
+<style>
+:root{
+  --bg:#08080f;--text:#eef;--muted:#6a6a90;
+  --accent:#7c5cfc;--accent2:#a78bfa;--pink:#f060a8;--green:#42d984;--gold:#f0c040;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+  font-family:'Hiragino Sans','Yu Gothic UI','Noto Sans JP',sans-serif;
+  user-select:none;-webkit-user-select:none;}
+canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60}
+#dm{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.c{position:absolute;white-space:nowrap;font-weight:800;
+  text-shadow:0 1px 4px rgba(0,0,0,.9),0 0 16px currentColor;
+  animation:flow linear forwards;will-change:transform}
+@keyframes flow{from{transform:translateX(100vw)}to{transform:translateX(-110%)}}
+
+#stage{position:fixed;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:30px 26px;text-align:center;z-index:10}
+.scene{display:none;width:100%;max-width:380px}
+.scene.on{display:block;animation:in .5s cubic-bezier(.2,1.2,.3,1)}
+@keyframes in{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:none}}
+
+/* SCENE 1 */
+#big{
+  font-size:clamp(1.9rem,8.5vw,2.7rem);font-weight:900;
+  line-height:1.5;letter-spacing:.01em;margin-bottom:34px;
+}
+#big .g{background:linear-gradient(100deg,var(--accent2),var(--pink));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+#big .s{display:block;font-size:.5em;font-weight:700;color:var(--muted);
+  letter-spacing:.28em;margin-bottom:20px}
+
+.task{
+  background:#14141f;border:1px solid #2a2a44;border-radius:18px;
+  padding:20px;display:flex;align-items:center;gap:16px;
+  margin-bottom:26px;text-align:left;
+}
+.task.done{border-color:var(--green)}
+#circle{
+  width:52px;height:52px;border-radius:50%;flex-shrink:0;
+  border:2.5px solid #3a3a5c;background:transparent;color:#4a4a70;
+  font-size:1.3rem;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .25s;animation:pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(124,92,252,.55)}
+  70%{box-shadow:0 0 0 18px rgba(124,92,252,0)}
+}
+.task.done #circle{background:var(--green);border-color:var(--green);
+  color:#000;font-weight:900;animation:none;transform:scale(1.06)}
+#tname{font-size:1.05rem;font-weight:700;flex:1}
+.task.done #tname{text-decoration:line-through;opacity:.5}
+
+#tap{font-size:.82rem;color:var(--gold);letter-spacing:.08em;
+  animation:blink 1.5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:.45}50%{opacity:1}}
+
+/* SCENE 2 */
+#hero{
+  font-size:clamp(1.7rem,7.5vw,2.4rem);font-weight:900;line-height:1.55;
+  margin-bottom:18px;
+}
+#hero .g{background:linear-gradient(100deg,var(--accent2),var(--pink));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+#lead{font-size:.92rem;color:#a0a0c8;line-height:2.1;margin-bottom:32px}
+#lead b{color:var(--text);font-weight:700}
+.cta{
+  display:block;width:100%;padding:19px;border-radius:16px;
+  background:linear-gradient(100deg,var(--accent),var(--pink));
+  color:#fff;text-decoration:none;font-size:1.05rem;font-weight:800;
+  letter-spacing:.06em;box-shadow:0 0 36px rgba(124,92,252,.45);
+  animation:breathe 2.6s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+.sub{
+  display:block;margin-top:18px;color:var(--muted);font-size:.72rem;
+  text-decoration:none;letter-spacing:.06em;
+}
+.sub u{text-decoration:none;border-bottom:1px solid #3a3a5c;padding-bottom:2px}
+#free{font-size:.68rem;color:var(--muted);margin-top:22px;letter-spacing:.1em}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div id="dm"></div>
+
+<div id="stage">
+
+  <div class="scene on" id="s1">
+    <div id="big">
+      <span class="s">FOCUSCAL</span>
+      やることを、<br><span class="g">ひとつ</span>終わらせてみて。
+    </div>
+    <div class="task" id="task">
+      <button id="circle">○</button>
+      <div id="tname">水を1杯のむ</div>
+    </div>
+    <div id="tap">👆 丸をタップ</div>
+  </div>
+
+  <div class="scene" id="s2">
+    <div id="hero">
+      終わらせると、<br><span class="g">こうなる。</span>
+    </div>
+    <div id="lead">
+      予定を消化するたび、画面が沸く。<br>
+      <b>それだけのカレンダー。</b>
+    </div>
+    <a class="cta" href="./index.html">自分の予定でやってみる →</a>
+    <a class="sub" href="./guide.html"><u>くわしい使い方を見る</u></a>
+    <div id="free">無料・登録不要・データは端末内だけ</div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+/* ---------- particles ---------- */
+const cv=document.getElementById('fx'),cx=cv.getContext('2d');
+let ps=[],raf=null;
+const rs=()=>{cv.width=innerWidth;cv.height=innerHeight};rs();addEventListener('resize',rs);
+function burst(x,y,n){
+  const cols=['#7c5cfc','#a78bfa','#f060a8','#42d984','#f0c040','#fff'];
+  for(let i=0;i<n;i++){
+    const a=(Math.PI*2/n)*i+Math.random()*.5,s=3+Math.random()*8;
+    ps.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2.5,al:1,
+      sz:4+Math.random()*6,c:cols[i%cols.length],
+      dc:.012+Math.random()*.01,g:.16,r:Math.random()>.4});
+  }
+  if(!raf)raf=requestAnimationFrame(loop);
+}
+function loop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  ps=ps.filter(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.vx*=.985;p.al-=p.dc;
+    cx.globalAlpha=Math.max(0,p.al);cx.fillStyle=p.c;
+    if(p.r){cx.save();cx.translate(p.x,p.y);cx.rotate(p.vx*.4);
+      cx.fillRect(-p.sz/2,-p.sz*.32,p.sz,p.sz*.64);cx.restore();}
+    else{cx.beginPath();cx.arc(p.x,p.y,p.sz/2,0,7);cx.fill();}
+    return p.al>0;
+  });
+  cx.globalAlpha=1;
+  raf=ps.length?requestAnimationFrame(loop):null;
+}
+
+/* ---------- danmaku ---------- */
+const MSG=['よくやった！！','888888888','天才かよ','ナイス達成✨','その調子！',
+  'うおおおおお','完璧です','神','進んでる進んでる','えらい！！','Nice!','最高'];
+const COL=['#fff','#64dcff','#42d984','#f0c040','#f060a8','#a78bfa','#ff8888'];
+const dm=document.getElementById('dm');let lane=0;
+function shoot(){
+  const el=document.createElement('div');
+  el.className='c';el.textContent=MSG[Math.floor(Math.random()*MSG.length)];
+  el.style.cssText=`top:${5+(lane++%9)*10+Math.random()*3}%;
+    font-size:${1.1+Math.random()*1.1}rem;
+    color:${COL[Math.floor(Math.random()*COL.length)]};
+    animation-duration:${3+Math.random()*2.2}s;`;
+  dm.appendChild(el);
+  el.addEventListener('animationend',()=>el.remove());
+}
+
+/* ---------- sound ---------- */
+let ac=null;
+function tone(f,d,t,v){
+  try{
+    if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    o.frequency.value=f;o.type=t||'triangle';
+    g.gain.setValueAtTime(v||.16,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);
+    o.start();o.stop(ac.currentTime+d);
+  }catch(e){}
+}
+
+/* ---------- the moment ---------- */
+let fired=false;
+document.getElementById('circle').addEventListener('click',e=>{
+  if(fired)return;fired=true;
+  const task=document.getElementById('task');
+  task.classList.add('done');
+  e.currentTarget.textContent='✓';
+  document.getElementById('tap').textContent='';
+
+  try{
+    const r=e.currentTarget.getBoundingClientRect();
+    burst(r.left+r.width/2,r.top+r.height/2,34);
+    tone(523,.09);setTimeout(()=>tone(659,.09),90);setTimeout(()=>tone(784,.18),180);
+    navigator.vibrate&&navigator.vibrate([20,10,35]);
+    // 波状に沸かせる
+    for(let i=0;i<14;i++)setTimeout(shoot,i*95);
+    setTimeout(()=>burst(innerWidth*.5,innerHeight*.42,28),240);
+    setTimeout(()=>burst(innerWidth*.24,innerHeight*.55,22),430);
+    setTimeout(()=>burst(innerWidth*.78,innerHeight*.5,22),600);
+  }catch(err){}
+
+  setTimeout(()=>{
+    document.getElementById('s1').classList.remove('on');
+    document.getElementById('s2').classList.add('on');
+    for(let i=0;i<6;i++)setTimeout(shoot,i*160);
+  },1700);
+});
+</script>
+</body>
+</html>
