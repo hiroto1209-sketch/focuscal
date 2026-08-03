@@ -774,7 +774,7 @@ body.amb #bottom-filler{background:rgba(19,19,31,.9)}
 .ev-name{font-size:.82rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ev-item.completed .ev-name{text-decoration:line-through}
 .ev-meta{font-size:.62rem;color:var(--muted);margin-top:3px;display:flex;gap:6px;flex-wrap:wrap}
-.ev-actions{display:flex;align-items:center;gap:4px}
+.ev-actions{display:flex;align-items:center;gap:9px;padding-left:4px}
 .ev-done-btn{
   width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border2);
   background:transparent;color:var(--muted);font-size:.8rem;
@@ -783,8 +783,14 @@ body.amb #bottom-filler{background:rgba(19,19,31,.9)}
 }
 .ev-done-btn:active{transform:scale(.82)}
 .ev-item.completed .ev-done-btn{background:var(--green);border-color:var(--green);color:#000;font-weight:700}
-.ev-del{background:none;border:none;color:#2a2a3e;font-size:.9rem;cursor:pointer;padding:2px 4px}
-.ev-del:active{color:var(--red)}
+.ev-del{
+  width:30px;height:30px;border-radius:10px;flex-shrink:0;
+  background:none;border:none;color:#33334e;font-size:.95rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;transition:color .15s,background .15s;
+}
+.ev-del::before{content:'';position:absolute;inset:-6px}
+.ev-del:active{color:var(--red);background:rgba(240,80,96,.12)}
 .ev-empty{font-size:.7rem;color:#222234;text-align:center;padding:18px 0;line-height:1.8}
 
 /* ═══════════ FORM ═══════════ */
@@ -2499,7 +2505,17 @@ function spawnComment(text,sub){
   el.style.cssText=`top:${topPct}%;font-size:${size}rem;color:${DM_COLORS[Math.floor(Math.random()*DM_COLORS.length)]};animation-duration:${dur}s;`;
   dmLayer.appendChild(el);
   el.addEventListener('animationend',()=>el.remove());
+  // 保険：animationendが発火しない状況でも必ず消す
+  setTimeout(()=>{if(el.isConnected)el.remove()},(dur+1.5)*1000);
 }
+// 画面復帰時・非表示時に残骸を一掃する
+function purgeDanmaku(){
+  while(dmLayer.firstChild)dmLayer.removeChild(dmLayer.firstChild);
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')purgeDanmaku();
+});
+addEventListener('pageshow',purgeDanmaku);
 function escHtmlDm(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 // ═══════════ PARTICLES ═══════════
@@ -3270,7 +3286,7 @@ function renderList(m,d){
       </div>
       <div class="ev-actions">
         <button class="ev-done-btn">${ev.done?'✓':'○'}</button>
-        <button class="ev-share" title="共有">↗</button>
+        <button class="ev-share" title="共有"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="M7 8l5-5 5 5"/><path d="M20 14v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5"/></svg></button>
         <button class="ev-del">✕</button>
       </div>`;
     item.querySelector('.ev-done-btn').onclick=e=>{
