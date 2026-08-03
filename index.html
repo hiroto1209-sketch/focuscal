@@ -1105,7 +1105,10 @@ textarea.form-input{resize:none;min-height:52px}
 #fab-cluster{
   position:fixed;right:14px;z-index:38;
   display:flex;flex-direction:column;align-items:center;gap:10px;
+  pointer-events:none; /* 空白部分でカレンダーのタップを塞がない */
 }
+#fab-main{pointer-events:auto}
+#fab-cluster.open .fab-item{pointer-events:auto}
 #fab-main{
   width:54px;height:54px;border-radius:50%;border:none;
   background:linear-gradient(135deg,var(--accent),var(--accent2));
@@ -1720,6 +1723,17 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
       <div class="onb-dot"></div>
       <div class="onb-dot"></div>
     </div>
+  </div>
+</div>
+
+<div id="imp-overlay">
+  <div id="imp-card">
+    <div id="imp-ic">📨</div>
+    <div id="imp-title">SHARED SCHEDULE</div>
+    <div id="imp-from"></div>
+    <div id="imp-list"></div>
+    <button class="imp-btn" id="imp-add">カレンダーに追加する</button>
+    <button class="imp-btn" id="imp-skip">今はしない</button>
   </div>
 </div>
 
@@ -3256,6 +3270,7 @@ function renderList(m,d){
       </div>
       <div class="ev-actions">
         <button class="ev-done-btn">${ev.done?'✓':'○'}</button>
+        <button class="ev-share" title="共有">↗</button>
         <button class="ev-del">✕</button>
       </div>`;
     item.querySelector('.ev-done-btn').onclick=e=>{
@@ -3264,6 +3279,7 @@ function renderList(m,d){
       toggleDone(m,d,idx,r.left+r.width/2,r.top+r.height/2);
     };
     item.querySelector('.ev-del').onclick=e=>{e.stopPropagation();delEvent(m,d,idx)};
+    item.querySelector('.ev-share').onclick=e=>{e.stopPropagation();shareEvent(m,d,ev)};
     // tap event body → edit
     item.onclick=()=>{
       editingIdx=idx;
@@ -3952,6 +3968,116 @@ function maybeShowOnboarding(){
   onbGo(0);
 }
 
+
+// ═══════════ SHARE / IMPORT ═══════════
+// 予定をURLに埋め込んで送る（サーバー不要・端末内完結）
+function encShare(payload){
+  // UTF-8 → base64url
+  const json=JSON.stringify(payload);
+  const bytes=new TextEncoder().encode(json);
+  let bin='';bytes.forEach(b=>bin+=String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function decShare(str){
+  const b64=str.replace(/-/g,'+').replace(/_/g,'/');
+  const bin=atob(b64);
+  const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+function shareBaseUrl(){
+  return location.origin+location.pathname.replace(/[^/]*$/,'index.html');
+}
+// 予定1件を共有
+function shareEvent(m,d,ev){
+  const payload={v:1,y:YEAR,items:[{m,d,t:ev.title,c:ev.cat,p:ev.pri,
+    a:ev.allday?1:0,s:ev.start||'',e:ev.end||'',n:ev.memo||''}]};
+  doShare(payload,`${m+1}/${d} ${ev.title}`);
+}
+// その日の予定をまとめて共有
+function shareDay(m,d){
+  const evs=dayData(loadMonth(m),d).events||[];
+  if(!evs.length){return}
+  const payload={v:1,y:YEAR,items:evs.map(ev=>({m,d,t:ev.title,c:ev.cat,p:ev.pri,
+    a:ev.allday?1:0,s:ev.start||'',e:ev.end||'',n:ev.memo||''}))};
+  doShare(payload,`${m+1}/${d} の予定 ${evs.length}件`);
+}
+async function doShare(payload,label){
+  let url;
+  try{url=shareBaseUrl()+'?s='+encShare(payload)}
+  catch(e){return}
+  const text=`【${label}】\nこのリンクを開くとカレンダーに追加できます\n${url}`;
+  try{
+    if(navigator.share){
+      await navigator.share({title:'FocusCal',text:label,url});
+    }else if(navigator.clipboard){
+      await navigator.clipboard.writeText(text);
+      showUndoToast('共有リンクをコピーしました');
+    }else{
+      prompt('このリンクをコピーして送ってください',url);
+    }
+    navigator.vibrate&&navigator.vibrate(10);
+  }catch(e){/* ユーザーがキャンセル */}
+}
+
+// 受信側：?s=... があれば取り込み確認を出す
+let pendingImport=null;
+function checkSharedLink(){
+  try{
+    const p=new URLSearchParams(location.search).get('s');
+    if(!p)return;
+    const data=decShare(p);
+    if(!data||!Array.isArray(data.items)||!data.items.length)return;
+    pendingImport=data;
+    const list=document.getElementById('imp-list');
+    list.innerHTML='';
+    data.items.slice(0,20).forEach(it=>{
+      const cat=CATS.find(c=>c.key===it.c)||CATS[5];
+      const row=document.createElement('div');row.className='imp-row';
+      const when=it.a?'終日':(it.s?it.s+(it.e?' 〜 '+it.e:''):'');
+      row.innerHTML=`<span class="imp-dot" style="background:${cat.bar}"></span>
+        <div class="imp-b"><div class="imp-t">${escHtml(it.t||'')}</div>
+        <div class="imp-m">${(it.m+1)}月${it.d}日${when?'・'+when:''}</div></div>`;
+      list.appendChild(row);
+    });
+    document.getElementById('imp-from').textContent=
+      `${data.items.length}件の予定が共有されました`;
+    document.getElementById('imp-overlay').classList.add('open');
+  }catch(e){/* 壊れたリンクは無視 */}
+}
+function clearShareParam(){
+  try{history.replaceState({},'',location.pathname)}catch(e){}
+}
+document.getElementById('imp-skip').onclick=()=>{
+  document.getElementById('imp-overlay').classList.remove('open');
+  pendingImport=null;clearShareParam();
+};
+document.getElementById('imp-add').onclick=()=>{
+  if(!pendingImport)return;
+  const byMonth={};
+  pendingImport.items.forEach(it=>{
+    const m=Math.max(0,Math.min(11,+it.m));
+    if(!byMonth[m])byMonth[m]=loadMonth(m);
+    const dd=dayData(byMonth[m],Math.max(1,Math.min(31,+it.d)));
+    dd.events.push({
+      id:Date.now()+Math.random(),
+      title:String(it.t||'').slice(0,60),
+      cat:CATS.some(c=>c.key===it.c)?it.c:'other',
+      pri:['low','med','high'].includes(it.p)?it.p:'med',
+      allday:!!it.a,start:it.a?'':String(it.s||''),end:it.a?'':String(it.e||''),
+      memo:String(it.n||'').slice(0,200),done:false,
+    });
+  });
+  Object.entries(byMonth).forEach(([m,md])=>saveMonth(+m,md));
+  undoStack.length=0;redoStack.length=0;updateUndoBtn();
+  refreshPages();updateAll();
+  document.getElementById('imp-overlay').classList.remove('open');
+  const n=pendingImport.items.length;
+  pendingImport=null;clearShareParam();
+  showAch('📨','SCHEDULE ADDED',`${n}件の予定を追加しました`,'カレンダーを確認してみて');
+  fireDanmaku(4);
+};
+
 // ═══════════ FAB CLUSTER ═══════════
 const fabCluster=document.getElementById('fab-cluster');
 const fabMain=document.getElementById('fab-main');
@@ -4397,6 +4523,7 @@ function init(){
   setPos(-W(),false);updateDots();refreshPages();updateAll();
   checkAch();renderSlider();updateUndoBtn();
   maybeShowOnboarding();
+  checkSharedLink();
 }
 requestAnimationFrame(()=>requestAnimationFrame(init));
 addEventListener('resize',()=>{layout();setPos(-W(),false)});
