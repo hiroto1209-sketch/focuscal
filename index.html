@@ -723,7 +723,9 @@ body.amb #bottom-filler{background:rgba(19,19,31,.9)}
 #ev-sheet{
   background:var(--surface);border-radius:22px 22px 0 0;
   padding:0;
-  width:100%;max-width:540px;max-height:92vh;
+  width:100%;max-width:540px;
+  max-height:calc(100vh - var(--safe-t) - 14px);
+  max-height:calc(100dvh - var(--safe-t) - 14px);
   display:flex;flex-direction:column;
   overflow:hidden;position:relative;
 }
@@ -986,7 +988,9 @@ textarea.form-input{resize:none;min-height:52px}
 #settings-sheet{
   background:var(--surface);border-radius:22px 22px 0 0;
   padding:0;width:100%;max-width:480px;
-  max-height:88vh;display:flex;flex-direction:column;overflow:hidden;
+  max-height:calc(100vh - var(--safe-t) - 14px);
+  max-height:calc(100dvh - var(--safe-t) - 14px);
+  display:flex;flex-direction:column;overflow:hidden;
   animation:slideUp .22s ease-out;
 }
 .settings-title{font-size:.82rem;font-weight:600;letter-spacing:.08em;
@@ -1064,7 +1068,9 @@ textarea.form-input{resize:none;min-height:52px}
 #pb-overlay.open{display:flex}
 #pb-sheet{
   background:var(--bg2);border-radius:22px 22px 0 0;
-  width:100%;max-width:540px;height:86vh;
+  width:100%;max-width:540px;
+  height:86vh;
+  height:min(86dvh, calc(100dvh - var(--safe-t) - 14px));
   display:flex;flex-direction:column;
   animation:slideUp .22s ease-out;overflow:hidden;
 }
@@ -1163,7 +1169,9 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
 #fit-overlay.open{display:flex}
 #fit-sheet{
   background:var(--bg2);border-radius:22px 22px 0 0;
-  width:100%;max-width:540px;height:88vh;
+  width:100%;max-width:540px;
+  height:88vh;
+  height:min(88dvh, calc(100dvh - var(--safe-t) - 14px));
   display:flex;flex-direction:column;overflow:hidden;
   animation:slideUp .22s ease-out;
 }
