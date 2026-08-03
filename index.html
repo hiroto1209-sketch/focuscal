@@ -1390,6 +1390,54 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
 #ev-sheet,#settings-sheet,#pb-list,#fit-body-area,#agenda-panel{
   overscroll-behavior:contain;
 }
+
+/* ═══ SHARE / IMPORT ═══ */
+.ev-share{
+  width:32px;height:32px;border-radius:10px;flex-shrink:0;
+  border:1px solid var(--border2);background:var(--surface3);
+  color:var(--accent2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .1s,border-color .15s;
+  position:relative;
+}
+.ev-share::before{content:'';position:absolute;inset:-7px}
+.ev-share svg{width:15px;height:15px;display:block}
+.ev-share:active{
+  background:var(--accent);border-color:var(--accent);color:#fff;transform:scale(.9);
+}
+#imp-overlay{
+  display:none;position:fixed;inset:0;z-index:95;
+  background:rgba(0,0,0,.82);align-items:center;justify-content:center;
+  -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);padding:22px;
+}
+#imp-overlay.open{display:flex}
+#imp-card{
+  background:var(--surface);border:1px solid var(--accent);border-radius:22px;
+  padding:24px 20px 18px;width:min(340px,92vw);text-align:center;
+  box-shadow:0 0 40px rgba(124,92,252,.3);animation:popIn .22s ease-out;
+}
+#imp-ic{font-size:2rem;margin-bottom:8px}
+#imp-title{font-size:.6rem;letter-spacing:.26em;color:var(--accent2);margin-bottom:14px}
+#imp-list{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:14px;
+  padding:12px;margin-bottom:8px;text-align:left;max-height:230px;overflow-y:auto;
+}
+.imp-row{
+  display:flex;align-items:center;gap:9px;padding:8px 4px;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.imp-row:last-child{border-bottom:none}
+.imp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.imp-b{flex:1;min-width:0}
+.imp-t{font-size:.84rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.imp-m{font-size:.62rem;color:var(--muted);margin-top:1px}
+#imp-from{font-size:.66rem;color:var(--muted);margin-bottom:16px}
+.imp-btn{
+  width:100%;padding:14px;border-radius:12px;border:none;
+  font-size:.88rem;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:.04em;
+}
+#imp-add{background:linear-gradient(100deg,var(--accent),var(--pink));color:#fff;margin-bottom:8px}
+#imp-skip{background:var(--surface2);color:var(--muted);border:1px solid var(--border2)}
 </style>
 </head>
 <body>
