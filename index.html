@@ -1663,6 +1663,16 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
       <div id="bg-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px"></div>
     </div>
     <div class="settings-section">
+      <div class="settings-section-label">予定の進捗をセルの枠で表示</div>
+      <div class="seg-control" id="ring-ctrl">
+        <button class="seg-btn" data-v="1">表示する</button>
+        <button class="seg-btn" data-v="0">表示しない</button>
+      </div>
+      <div class="bk-note" style="margin-top:8px">
+        完了した予定の割合を、テーマカラーの線でセルの内側に描きます。
+      </div>
+    </div>
+    <div class="settings-section">
       <div class="settings-section-label">筋トレした日に💪マークを表示</div>
       <div class="seg-control" id="fit-mark-ctrl">
         <button class="seg-btn" data-v="1">表示する</button>
@@ -2493,8 +2503,9 @@ function loadSettings(){
       enCustom:s.enCustom??[],zhCustom:s.zhCustom??[],
       pbFavs:s.pbFavs??[],pbSlow:s.pbSlow??false,fitMark:s.fitMark??true,
       theme:s.theme??'violet',secretUnlocked:s.secretUnlocked??false,
-      bgTint:s.bgTint??'default',bgUnlocked:s.bgUnlocked??false};
-  }catch{return{weekStart:0,dmMsgs:[...DEFAULT_DM_MSGS],dmDensity:'normal',dmLang:'ja',dmVoice:true,dmStyle:'mix',enCustom:[],zhCustom:[],pbFavs:[],pbSlow:false,fitMark:true,theme:'violet',secretUnlocked:false,bgTint:'default',bgUnlocked:false}}
+      bgTint:s.bgTint??'default',bgUnlocked:s.bgUnlocked??false,
+      progressRing:s.progressRing??true};
+  }catch{return{weekStart:0,dmMsgs:[...DEFAULT_DM_MSGS],dmDensity:'normal',dmLang:'ja',dmVoice:true,dmStyle:'mix',enCustom:[],zhCustom:[],pbFavs:[],pbSlow:false,fitMark:true,theme:'violet',secretUnlocked:false,bgTint:'default',bgUnlocked:false,progressRing:true}}
 }
 function saveSettings(){localStorage.setItem('fc_settings',JSON.stringify(settings))}
 let settings=loadSettings();
@@ -2822,7 +2833,7 @@ function buildGrid(pageEl,m){
     }
     const evs=dd.events||[],total=evs.length,done=evs.filter(e=>e.done).length;
     if(total>0&&done===total)cell.classList.add('done-all');
-    if(total>0){
+    if(total>0&&settings.progressRing){
       const ring=document.createElement('div');
       ring.className='progress-ring';
       ring.dataset.pct=(done/total).toFixed(4);
@@ -3641,6 +3652,10 @@ function renderSettings(){
   document.querySelectorAll('#week-start-ctrl .seg-btn').forEach(b=>{
     b.classList.toggle('active',+b.dataset.v===settings.weekStart);
     b.onclick=()=>{settings.weekStart=+b.dataset.v;saveSettings();renderSettings();renderDayLabels();refreshPages()};
+  });
+  document.querySelectorAll('#ring-ctrl .seg-btn').forEach(b=>{
+    b.classList.toggle('active',(b.dataset.v==='1')===settings.progressRing);
+    b.onclick=()=>{settings.progressRing=b.dataset.v==='1';saveSettings();renderSettings();refreshPages()};
   });
   document.querySelectorAll('#fit-mark-ctrl .seg-btn').forEach(b=>{
     b.classList.toggle('active',(b.dataset.v==='1')===settings.fitMark);
