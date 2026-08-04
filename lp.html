@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08080f">
+<title>FocusCal — 終わらせた瞬間、画面が沸く。</title>
+<meta name="description" content="予定を完了するとコメントが画面を流れるカレンダー。ADHDの僕が、自分のために作りました。無料・登録不要。">
+<meta property="og:title" content="FocusCal — 終わらせた瞬間、画面が沸く。">
+<meta property="og:description" content="ADHDの僕が、自分のために作ったカレンダー。無料・登録不要。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#0b0b1a;
+  --ink:#161628;
+  --ink2:#1e1e34;
+  --line:#32324e;
+  --text:#f2f2ff;
+  --dim:#b4b4d8;
+  --faint:#8484ae;
+
+  --accent:#7c5cfc;
+  --accent2:#a78bfa;
+
+  --rose:#f060a8;
+  --mint:#42d984;
+  --gold:#f0c040;
+  --sky:#64dcff;
+
+  --display:'Dela Gothic One',sans-serif;
+  --body:'Zen Kaku Gothic New',sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--void);color:var(--text);
+  font-family:var(--body);font-weight:400;
+  line-height:1.95;overflow-x:hidden;
+  letter-spacing:.01em;
+}
+::selection{background:var(--accent);color:#fff}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent2);outline-offset:3px;border-radius:4px}
+
+
+/* ═══════════ ギャラクシー背景 ═══════════ */
+#sky{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.mist{
+  position:absolute;width:80vmax;height:80vmax;border-radius:50%;
+  filter:blur(90px);mix-blend-mode:screen;opacity:.55;
+  will-change:transform;
+}
+.mist.m1{
+  background:radial-gradient(circle,rgba(120,70,255,.42),transparent 62%);
+  top:-26vmax;left:-20vmax;animation:drift1 34s ease-in-out infinite alternate;
+}
+.mist.m2{
+  background:radial-gradient(circle,rgba(60,180,255,.30),transparent 62%);
+  bottom:-30vmax;right:-22vmax;animation:drift2 42s ease-in-out infinite alternate;
+}
+.mist.m3{
+  background:radial-gradient(circle,rgba(240,96,180,.24),transparent 62%);
+  top:38%;left:14%;animation:drift3 50s ease-in-out infinite alternate;
+}
+@keyframes drift1{to{transform:translate(16vmax,14vmax) scale(1.2)}}
+@keyframes drift2{to{transform:translate(-14vmax,-16vmax) scale(1.25)}}
+@keyframes drift3{to{transform:translate(12vmax,-10vmax) scale(1.32)}}
+#stars{position:fixed;inset:0;z-index:1;pointer-events:none;mix-blend-mode:screen}
+/* 本文を霧の上に置き、可読性を確保する薄いベール */
+#veil{
+  position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg,rgba(11,11,26,.55),rgba(11,11,26,.30) 40%,rgba(11,11,26,.62));
+}
+
+/* ═══════════ 署名：画面の縁を囲むスクロール進捗 ═══════════ */
+#edge{position:fixed;inset:0;pointer-events:none;z-index:80}
+#edge svg{position:absolute;inset:0;width:100%;height:100%}
+#edge path{
+  fill:none;stroke:var(--accent2);stroke-width:2;stroke-linecap:round;
+  filter:drop-shadow(0 0 6px var(--accent2));
+  transition:stroke .5s;
+}
+#pct{
+  position:fixed;right:14px;bottom:14px;z-index:81;
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;
+  color:var(--faint);pointer-events:none;
+}
+#pct b{color:var(--accent2);font-weight:400}
+
+/* ═══════════ 弾幕 ═══════════ */
+#dm{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
+.cm{
+  position:absolute;white-space:nowrap;font-weight:900;
+  text-shadow:0 1px 4px rgba(0,0,0,.9),0 0 18px currentColor;
+  animation:flow linear forwards;will-change:transform;
+}
+@keyframes flow{from{transform:translateX(100vw)}to{transform:translateX(-120%)}}
+canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:75}
+
+/* ═══════════ 共通 ═══════════ */
+.wrap{max-width:660px;margin:0 auto;padding:0 24px}
+section{position:relative;z-index:5}
+#pain,#inside,#story{background:linear-gradient(180deg,transparent,rgba(11,11,26,.45) 12%,rgba(11,11,26,.45) 88%,transparent)}
+.eyebrow{
+  font-family:var(--mono);font-size:.62rem;letter-spacing:.34em;
+  color:var(--accent2);margin-bottom:20px;
+}
+.rise{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.8,.3,1)}
+.rise.in{opacity:1;transform:none}
+
+/* ═══════════ HERO ═══════════ */
+#hero{
+  min-height:100svh;display:flex;flex-direction:column;
+  justify-content:center;padding:90px 24px 70px;
+  background:radial-gradient(ellipse 80% 55% at 50% 38%,rgba(40,22,92,.85) 0%,transparent 72%);
+}
+#hero .wrap{padding:0}
+h1{
+  font-family:var(--display);font-weight:400;
+  font-size:clamp(2.1rem,9.2vw,3.6rem);
+  line-height:1.42;letter-spacing:.005em;margin-bottom:28px;
+}
+h1 .burst{
+  background:linear-gradient(96deg,var(--accent2),var(--rose),var(--gold),var(--accent2));
+  background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  animation:shine 6s linear infinite;
+}
+@keyframes shine{to{background-position:300% 0}}
+#hero p{font-size:.95rem;color:var(--dim);margin-bottom:38px;line-height:2.15}
+#hero p b{color:var(--text);font-weight:700}
+.scroll-cue{
+  margin-top:52px;font-family:var(--mono);font-size:.58rem;
+  letter-spacing:.3em;color:var(--faint);
+}
+.scroll-cue span{display:inline-block;animation:bob 2.2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+
+/* ═══════════ 共感パート ═══════════ */
+#pain{padding:130px 0 110px}
+.beat{
+  font-family:var(--display);font-weight:400;
+  font-size:clamp(1.35rem,5.6vw,1.95rem);
+  line-height:1.75;margin-bottom:14px;color:#d8d8f0;
+}
+.beat.mute{color:var(--faint)}
+.turn{
+  margin-top:56px;padding-top:44px;border-top:1px solid var(--line);
+}
+.turn .lead{font-size:.92rem;color:var(--dim);margin-bottom:16px}
+.turn .punch{
+  font-family:var(--display);font-weight:400;
+  font-size:clamp(1.5rem,6.4vw,2.2rem);line-height:1.6;
+}
+.turn .punch em{
+  font-style:normal;
+  background:linear-gradient(96deg,var(--rose),var(--gold));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+/* ═══════════ 体験パート（署名の山場） ═══════════ */
+#feel{padding:100px 0 120px;text-align:center}
+#feel .kicker{
+  font-family:var(--display);font-weight:400;
+  font-size:clamp(1.5rem,6.4vw,2.2rem);line-height:1.6;margin-bottom:12px;
+}
+#feel .sub{font-size:.88rem;color:var(--dim);margin-bottom:40px}
+.demo-card{
+  background:linear-gradient(160deg,rgba(34,34,58,.92),rgba(20,20,38,.92));
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border:1px solid var(--line);border-radius:22px;
+  padding:26px 22px;text-align:left;position:relative;overflow:hidden;
+}
+.demo-card::after{
+  content:'';position:absolute;inset:0;border-radius:22px;
+  box-shadow:inset 0 0 0 1px transparent;transition:box-shadow .4s;
+  pointer-events:none;
+}
+.demo-card.done::after{box-shadow:inset 0 0 0 1.5px var(--mint),0 0 40px rgba(66,217,132,.14)}
+.demo-date{
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;
+  color:var(--faint);margin-bottom:16px;
+}
+.demo-row{display:flex;align-items:center;gap:16px}
+#tick{
+  width:54px;height:54px;border-radius:50%;flex-shrink:0;
+  border:2.5px solid #3c3c60;background:transparent;
+  color:#54547e;font-size:1.35rem;font-family:var(--body);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:background .25s,border-color .25s,color .25s,transform .2s;
+  animation:beckon 1.9s ease-in-out infinite;
+}
+@keyframes beckon{
+  0%,100%{box-shadow:0 0 0 0 rgba(124,92,252,.5)}
+  70%{box-shadow:0 0 0 20px rgba(124,92,252,0)}
+}
+#tick:active{transform:scale(.9)}
+.demo-card.done #tick{
+  background:var(--mint);border-color:var(--mint);color:#04140a;
+  font-weight:900;animation:none;
+}
+#tick-label{font-size:1.02rem;font-weight:700;flex:1}
+.demo-card.done #tick-label{text-decoration:line-through;color:var(--faint)}
+.tap-hint{
+  margin-top:22px;font-family:var(--mono);font-size:.62rem;
+  letter-spacing:.2em;color:var(--gold);
+  animation:pulse-op 1.7s ease-in-out infinite;
+}
+@keyframes pulse-op{0%,100%{opacity:.4}50%{opacity:1}}
+.after-line{
+  margin-top:30px;font-size:.92rem;color:var(--dim);line-height:2.1;
+  min-height:60px;opacity:0;transition:opacity .6s;
+}
+.after-line.show{opacity:1}
+.after-line b{color:var(--text);font-weight:700}
+
+/* ═══════════ 中身 ═══════════ */
+#inside{padding:110px 0}
+.sec-head{
+  font-family:var(--display);font-weight:400;
+  font-size:clamp(1.4rem,5.8vw,2rem);line-height:1.6;margin-bottom:40px;
+}
+.item{
+  padding:26px 0;border-top:1px solid var(--line);
+  display:grid;grid-template-columns:44px 1fr;gap:18px;align-items:start;
+}
+.item:last-child{border-bottom:1px solid var(--line)}
+.item .ic{
+  font-size:1.4rem;line-height:1;padding-top:2px;
+  filter:drop-shadow(0 0 10px rgba(167,139,250,.4));
+}
+.item h3{font-size:1rem;font-weight:700;margin-bottom:7px;letter-spacing:.01em}
+.item p{font-size:.85rem;color:var(--dim);line-height:2}
+
+/* ═══════════ テーマ ═══════════ */
+#skin{padding:110px 0 100px}
+#skin .sub{font-size:.88rem;color:var(--dim);margin-bottom:30px}
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.sw{
+  aspect-ratio:1;border-radius:14px;border:2px solid transparent;
+  cursor:pointer;position:relative;transition:transform .18s,border-color .2s;
+  font-family:var(--mono);font-size:.5rem;letter-spacing:.06em;
+  color:rgba(255,255,255,.92);text-shadow:0 1px 4px rgba(0,0,0,.55);
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:7px;
+}
+.sw:active{transform:scale(.92)}
+.sw.on{border-color:#fff}
+.skin-note{
+  margin-top:20px;font-size:.78rem;color:var(--faint);line-height:2;
+}
+
+/* ═══════════ 秘密 ═══════════ */
+#secret{padding:0 0 110px}
+.vault{
+  background:linear-gradient(150deg,rgba(38,24,74,.92),rgba(18,26,58,.92));
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  border:1px solid var(--accent);border-radius:22px;padding:28px 24px;
+}
+.vault h3{
+  font-family:var(--display);font-weight:400;font-size:1.15rem;
+  margin-bottom:8px;line-height:1.6;
+}
+.vault .sub{font-size:.8rem;color:var(--dim);margin-bottom:20px}
+.hint{
+  font-size:.84rem;color:var(--dim);line-height:1.9;
+  padding:13px 15px;margin-bottom:9px;border-radius:12px;
+  background:rgba(0,0,0,.3);border:1px solid var(--line);
+  filter:blur(5px);cursor:pointer;transition:filter .45s;
+}
+.hint.open{filter:none}
+.hint b{color:var(--gold);font-weight:700}
+
+/* ═══════════ 物語 ═══════════ */
+#story{padding:110px 0}
+#story .body{font-size:.92rem;color:var(--dim);line-height:2.3}
+#story .body p{margin-bottom:22px}
+#story .body b{color:var(--text);font-weight:700}
+.pull{
+  font-family:var(--display);font-weight:400;
+  font-size:clamp(1.25rem,5.4vw,1.75rem);line-height:1.7;
+  color:var(--text);margin:34px 0;padding-left:20px;
+  border-left:2px solid var(--accent);
+}
+.specs{
+  display:flex;flex-wrap:wrap;gap:8px;margin-top:30px;
+}
+.spec{
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;
+  color:var(--dim);border:1px solid var(--line);border-radius:20px;
+  padding:6px 13px;
+}
+
+/* ═══════════ 最終 ═══════════ */
+#end{
+  padding:110px 0 120px;text-align:center;
+  background:radial-gradient(ellipse 80% 60% at 50% 55%,rgba(42,22,96,.85) 0%,transparent 74%);
+}
+#end .kicker{
+  font-family:var(--display);font-weight:400;
+  font-size:clamp(1.6rem,6.8vw,2.35rem);line-height:1.55;margin-bottom:18px;
+}
+#end .sub{font-size:.9rem;color:var(--dim);margin-bottom:36px;line-height:2.1}
+.cta{
+  display:block;width:100%;padding:21px;border-radius:17px;
+  background:linear-gradient(96deg,var(--accent),var(--rose));
+  color:#fff;text-decoration:none;
+  font-size:1.06rem;font-weight:900;letter-spacing:.05em;
+  box-shadow:0 0 44px rgba(124,92,252,.42);
+  animation:breathe 3s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.028)}}
+.cta:active{transform:scale(.98)}
+.terms{
+  margin-top:22px;font-family:var(--mono);font-size:.6rem;
+  letter-spacing:.14em;color:var(--faint);line-height:2.2;
+}
+.subline{
+  display:inline-block;margin-top:20px;font-size:.76rem;
+  color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line);
+  padding-bottom:3px;
+}
+footer{
+  padding:34px 24px calc(30px + env(safe-area-inset-bottom));
+  text-align:center;font-family:var(--mono);
+  font-size:.58rem;letter-spacing:.14em;color:var(--faint);
+  border-top:1px solid var(--line);
+}
+
+@media(prefers-reduced-motion:reduce){
+  .mist{animation:none!important}
+  *{animation:none!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+  .rise{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<div id="sky"><div class="mist m1"></div><div class="mist m2"></div><div class="mist m3"></div></div>
+<canvas id="stars"></canvas>
+<div id="veil"></div>
+
+<div id="edge"><svg id="edge-svg"><path id="edge-path"/></svg></div>
+<div id="pct"><b id="pct-n">0</b>% 読了</div>
+<div id="dm"></div>
+<canvas id="fx"></canvas>
+
+<!-- ══════════ HERO ══════════ -->
+<header id="hero">
+  <div class="wrap">
+    <div class="eyebrow">FOCUSCAL / 無料・登録不要</div>
+    <h1>終わらせた瞬間、<br><span class="burst">画面が沸く。</span></h1>
+    <p>
+      予定にチェックを入れると、<b>コメントが画面じゅうを流れる</b>カレンダー。<br>
+      ADHDの僕が、自分のために作りました。
+    </p>
+    <div class="scroll-cue"><span>↓ SCROLL</span></div>
+  </div>
+</header>
+
+<!-- ══════════ 共感 ══════════ -->
+<section id="pain">
+  <div class="wrap">
+    <div class="eyebrow rise">なぜ続かないのか</div>
+    <div class="beat rise">やることは、分かってる。</div>
+    <div class="beat rise">やる気だって、ある。</div>
+    <div class="beat rise">なのに、手が動かない。</div>
+    <div class="beat mute rise">そして「明日やろう」が、積み上がっていく。</div>
+
+    <div class="turn rise">
+      <div class="lead">たぶん、意志が弱いからじゃない。</div>
+      <div class="punch">終わらせても、<br><em>何も起きない</em>からだ。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 体験 ══════════ -->
+<section id="feel">
+  <div class="wrap">
+    <div class="eyebrow rise">だから、起きるようにした</div>
+    <div class="kicker rise">押してみて。</div>
+    <div class="sub rise">このページの中で、そのまま体験できます。</div>
+
+    <div class="demo-card rise" id="card">
+      <div class="demo-date">TODAY</div>
+      <div class="demo-row">
+        <button id="tick" aria-label="完了にする">○</button>
+        <div id="tick-label">水を1杯のむ</div>
+      </div>
+    </div>
+    <div class="tap-hint rise" id="hint">👆 丸をタップ</div>
+
+    <div class="after-line" id="after">
+      たったこれだけ。<br>
+      でも <b>「終わらせると気持ちいい」</b> が身体に入ると、<br>
+      次の予定に手が伸びるようになる。
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 中身 ══════════ -->
+<section id="inside">
+  <div class="wrap">
+    <div class="eyebrow rise">中身</div>
+    <div class="sec-head rise">お祝いのために、<br>全部そろえた。</div>
+
+    <div class="item rise">
+      <div class="ic">💬</div>
+      <div>
+        <h3>流れるコメントは、自分で書ける</h3>
+        <p>「よくやった」「888888888」「天才かよ」。言われたい言葉に全部書き換えられます。量も、控えめからお祭り騒ぎまで。</p>
+      </div>
+    </div>
+
+    <div class="item rise">
+      <div class="ic">🌏</div>
+      <div>
+        <h3>英語と中国語でも褒められる</h3>
+        <p>達成した瞬間に、発音つきのフレーズが流れて音声も鳴る。全144個。教科書どおりの言い方も、ネイティブのスラングも。</p>
+      </div>
+    </div>
+
+    <div class="item rise">
+      <div class="ic">💪</div>
+      <div>
+        <h3>鍛えた場所が、光る</h3>
+        <p>筋トレを記録すると、人体図のその部位が濃くなっていきます。今月サボってる場所が、ひと目でわかる。</p>
+      </div>
+    </div>
+
+    <div class="item rise">
+      <div class="ic">⏳</div>
+      <div>
+        <h3>楽しみな日を、光らせておける</h3>
+        <p>旅行やライブの日にエフェクトをつけると、「あと12日」が毎日目に入る。頑張る理由が、カレンダーの上にある状態に。</p>
+      </div>
+    </div>
+
+    <div class="item rise">
+      <div class="ic">↩</div>
+      <div>
+        <h3>何度でも、取り消せる</h3>
+        <p>間違えて消しても100回前まで戻せます。壊す心配がないから、遠慮なく触れる。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ テーマ ══════════ -->
+<section id="skin">
+  <div class="wrap">
+    <div class="eyebrow rise">見た目</div>
+    <div class="sec-head rise">色は、12種類。</div>
+    <div class="sub rise">タップすると、このページの色も変わります。</div>
+    <div class="swatches rise" id="sw"></div>
+    <div class="skin-note rise">
+      桜は花びらが舞い、深海は泡が昇り、焔は火の粉が立ちのぼる。<br>
+      背景まで動くテーマも入っています。
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 秘密 ══════════ -->
+<section id="secret">
+  <div class="wrap">
+    <div class="vault rise">
+      <h3>そして、隠しコマンドが3つ。</h3>
+      <div class="sub">見つけた人だけが使えます。タップでネタバレ。</div>
+      <div class="hint" tabindex="0">「今日」ボタンを<b>7回連打</b>すると、星が瞬き流れ星が落ちる隠しテーマが解放されます。</div>
+      <div class="hint" tabindex="0">🎉ボタンを<b>長押し</b>で、40連コメントが画面を埋め尽くします。</div>
+      <div class="hint" tabindex="0">上部の「◯年◯月」を<b>長押し</b>すると、背景の色を9種類から選べるようになります。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 物語 ══════════ -->
+<section id="story">
+  <div class="wrap">
+    <div class="eyebrow rise">作った人</div>
+    <div class="body">
+      <p class="rise">
+        僕はADHDです。予定を立てるのは得意なのに、実行するのがずっと苦手でした。
+        手帳もアプリも、いくつ試したか分かりません。<b>どれも三日で開かなくなった。</b>
+      </p>
+      <p class="rise">
+        理由は、たぶんこうです。既存のカレンダーは、几帳面な人が几帳面に使うために作られている。
+        チェックを入れても、灰色になって消えるだけ。僕の脳は、それでは動きませんでした。
+      </p>
+      <div class="pull rise">なければ、作るしかなかった。</div>
+      <p class="rise">
+        パソコンは持っていません。<b>iPhone一台で、AIと相談しながら</b>、少しずつ組み上げました。
+        自分で毎日使って、使いにくいところをその日のうちに直す。それを何十回も繰り返して、今のかたちになっています。
+      </p>
+      <p class="rise">
+        僕にはこれが効きました。同じように「続かない」で困っている人に、<b>一度だけ試してほしい</b>と思っています。
+      </p>
+      <div class="specs rise">
+        <div class="spec">個人開発</div>
+        <div class="spec">iPhoneのみで制作</div>
+        <div class="spec">広告なし</div>
+        <div class="spec">データは端末内のみ</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 最終 ══════════ -->
+<section id="end">
+  <div class="wrap">
+    <div class="eyebrow rise">ここまで読んでくれてありがとう</div>
+    <div class="kicker rise">今日のぶんを、<br>ひとつ終わらせにいこう。</div>
+    <div class="sub rise">
+      登録もインストールもいりません。<br>
+      開いた瞬間から使えます。
+    </div>
+    <a class="cta rise" id="go" href="https://hiroto1209-sketch.github.io/focuscal/">カレンダーを開く →</a>
+    <div class="terms rise">無料 / 登録不要 / 広告なし / データは端末内だけ</div>
+    <a class="subline rise" href="https://hiroto1209-sketch.github.io/focuscal/guide.html">先に使い方を読む</a>
+  </div>
+</section>
+
+<footer>FOCUSCAL — MADE ON AN IPHONE</footer>
+
+<script>
+'use strict';
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ───────── パーティクル ───────── */
+const cv=document.getElementById('fx'),cx=cv.getContext('2d');
+let ps=[],raf=null;
+const fit=()=>{cv.width=innerWidth;cv.height=innerHeight};
+fit();addEventListener('resize',fit);
+function accentSet(){
+  const s=getComputedStyle(document.documentElement);
+  return[s.getPropertyValue('--accent').trim(),s.getPropertyValue('--accent2').trim(),
+    '#f060a8','#42d984','#f0c040','#ffffff'];
+}
+function burst(x,y,n){
+  if(reduce)return;
+  const cols=accentSet();
+  for(let i=0;i<n;i++){
+    const a=(Math.PI*2/n)*i+Math.random()*.5,sp=3+Math.random()*8;
+    ps.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2.4,al:1,
+      sz:4+Math.random()*6,c:cols[i%cols.length],
+      dc:.012+Math.random()*.01,g:.16,rect:Math.random()>.45});
+  }
+  if(!raf)raf=requestAnimationFrame(step);
+}
+function step(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  ps=ps.filter(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.vx*=.985;p.al-=p.dc;
+    cx.globalAlpha=Math.max(0,p.al);cx.fillStyle=p.c;
+    if(p.rect){cx.save();cx.translate(p.x,p.y);cx.rotate(p.vx*.4);
+      cx.fillRect(-p.sz/2,-p.sz*.32,p.sz,p.sz*.64);cx.restore();}
+    else{cx.beginPath();cx.arc(p.x,p.y,p.sz/2,0,7);cx.fill();}
+    return p.al>0;
+  });
+  cx.globalAlpha=1;
+  raf=ps.length?requestAnimationFrame(step):null;
+}
+
+/* ───────── 弾幕 ───────── */
+const MSG=['よくやった！！','888888888','天才かよ','ナイス達成✨','その調子！',
+  'うおおおおお','完璧です','神','進んでる進んでる','えらい！！',
+  'Great job!','You crushed it!','做得好！','太棒了！'];
+const dmEl=document.getElementById('dm');
+let lane=0;
+function comment(strong){
+  if(reduce)return;
+  const cols=accentSet();
+  const el=document.createElement('div');
+  el.className='cm';
+  el.textContent=MSG[Math.floor(Math.random()*MSG.length)];
+  const dur=3.2+Math.random()*2.4;
+  el.style.cssText='top:'+(5+(lane++%9)*10+Math.random()*3)+'%;'+
+    'font-size:'+(1+Math.random()*1.1)+'rem;'+
+    'color:'+cols[Math.floor(Math.random()*cols.length)]+';'+
+    'animation-duration:'+dur+'s;'+
+    'opacity:'+(strong?.9:.14)+';';
+  dmEl.appendChild(el);
+  el.addEventListener('animationend',()=>el.remove());
+  setTimeout(()=>{if(el.isConnected)el.remove()},(dur+2)*1000);
+}
+if(!reduce){
+  setInterval(()=>{if(document.visibilityState==='visible')comment(false)},1700);
+  for(let i=0;i<4;i++)setTimeout(()=>comment(false),i*450);
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')dmEl.innerHTML='';
+});
+
+/* ───────── 音 ───────── */
+let ac=null;
+function tone(f,d,v){
+  try{
+    if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    o.frequency.value=f;o.type='triangle';
+    g.gain.setValueAtTime(v||.14,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);
+    o.start();o.stop(ac.currentTime+d);
+  }catch(e){}
+}
+function chime(){tone(523,.09);setTimeout(()=>tone(659,.09),90);setTimeout(()=>tone(784,.18),180)}
+
+
+/* ───────── 星空 ───────── */
+const sc=document.getElementById('stars'),sx=sc.getContext('2d');
+let stars=[],shoot=null,nextShoot=0,sRaf=null;
+function seedStars(){
+  sc.width=innerWidth;sc.height=innerHeight;
+  stars=[];
+  const n=Math.min(150,Math.round(innerWidth*innerHeight/7000));
+  for(let i=0;i<n;i++){
+    stars.push({
+      x:Math.random()*innerWidth,y:Math.random()*innerHeight,
+      r:.4+Math.random()*1.4,
+      ph:Math.random()*Math.PI*2,
+      sp:.35+Math.random()*1.1,
+      hue:Math.random()<.28?200+Math.random()*45:(Math.random()<.5?268:0)
+    });
+  }
+}
+function starLoop(t){
+  sx.clearRect(0,0,sc.width,sc.height);
+  stars.forEach(st=>{
+    const tw=.28+.72*(.5+.5*Math.sin(t*.001*st.sp+st.ph));
+    sx.globalAlpha=tw*.75;
+    sx.fillStyle=st.hue?'hsl('+st.hue+',82%,82%)':'#fff';
+    sx.beginPath();sx.arc(st.x,st.y,st.r,0,7);sx.fill();
+    if(st.r>1.25&&tw>.82){
+      sx.globalAlpha=(tw-.82)*2*.55;
+      sx.strokeStyle='#fff';sx.lineWidth=.5;
+      sx.beginPath();
+      sx.moveTo(st.x-st.r*4.5,st.y);sx.lineTo(st.x+st.r*4.5,st.y);
+      sx.moveTo(st.x,st.y-st.r*4.5);sx.lineTo(st.x,st.y+st.r*4.5);
+      sx.stroke();
+    }
+  });
+  if(!shoot&&t>nextShoot){
+    const left=Math.random()>.5;
+    shoot={x:left?-50:innerWidth+50,y:Math.random()*innerHeight*.45,
+      vx:(left?1:-1)*(8+Math.random()*5),vy:2.4+Math.random()*2,life:1};
+  }
+  if(shoot){
+    shoot.x+=shoot.vx;shoot.y+=shoot.vy;shoot.life-=.012;
+    const tx=shoot.x-shoot.vx*10,ty=shoot.y-shoot.vy*10;
+    const g=sx.createLinearGradient(tx,ty,shoot.x,shoot.y);
+    g.addColorStop(0,'rgba(160,200,255,0)');
+    g.addColorStop(1,'rgba(226,240,255,'+Math.max(0,shoot.life)+')');
+    sx.globalAlpha=1;sx.strokeStyle=g;sx.lineWidth=2;
+    sx.beginPath();sx.moveTo(tx,ty);sx.lineTo(shoot.x,shoot.y);sx.stroke();
+    if(shoot.life<=0||shoot.x<-90||shoot.x>innerWidth+90||shoot.y>innerHeight){
+      shoot=null;nextShoot=t+4500+Math.random()*8000;
+    }
+  }
+  sx.globalAlpha=1;
+  sRaf=requestAnimationFrame(starLoop);
+}
+if(!reduce){
+  seedStars();
+  nextShoot=performance.now()+2500;
+  sRaf=requestAnimationFrame(starLoop);
+  addEventListener('resize',seedStars);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'){if(!sRaf)sRaf=requestAnimationFrame(starLoop)}
+    else if(sRaf){cancelAnimationFrame(sRaf);sRaf=null}
+  });
+}else{
+  // 動きを止める設定でも静的な星は描く
+  seedStars();
+  sx.globalAlpha=.5;
+  stars.forEach(st=>{sx.fillStyle='#fff';sx.beginPath();sx.arc(st.x,st.y,st.r,0,7);sx.fill()});
+}
+
+/* ───────── 署名：縁を囲む読了リング ───────── */
+const path=document.getElementById('edge-path');
+let total=0;
+function buildEdge(){
+  const w=innerWidth,h=innerHeight,r=16,i=5;
+  const x=i,y=i,W=w-i*2,H=h-i*2,cxp=x+W/2;
+  path.setAttribute('d',
+    'M '+cxp+' '+y+
+    ' H '+(x+W-r)+' A '+r+' '+r+' 0 0 1 '+(x+W)+' '+(y+r)+
+    ' V '+(y+H-r)+' A '+r+' '+r+' 0 0 1 '+(x+W-r)+' '+(y+H)+
+    ' H '+(x+r)+' A '+r+' '+r+' 0 0 1 '+x+' '+(y+H-r)+
+    ' V '+(y+r)+' A '+r+' '+r+' 0 0 1 '+(x+r)+' '+y+
+    ' H '+cxp);
+  total=path.getTotalLength();
+  path.style.strokeDasharray=total;
+  onScroll();
+}
+let doneFired=false;
+const pctN=document.getElementById('pct-n');
+function onScroll(){
+  const max=document.body.scrollHeight-innerHeight;
+  const p=max>0?Math.min(1,Math.max(0,scrollY/max)):0;
+  path.style.strokeDashoffset=total*(1-p);
+  pctN.textContent=Math.round(p*100);
+  if(p>.985&&!doneFired){
+    doneFired=true;
+    if(!reduce){
+      for(let i=0;i<12;i++)setTimeout(()=>comment(true),i*110);
+      burst(innerWidth*.5,innerHeight*.55,32);
+      setTimeout(()=>burst(innerWidth*.22,innerHeight*.45,22),220);
+      setTimeout(()=>burst(innerWidth*.78,innerHeight*.5,22),420);
+      chime();
+      if(navigator.vibrate)navigator.vibrate([18,10,30]);
+    }
+  }
+}
+buildEdge();
+addEventListener('resize',buildEdge);
+addEventListener('scroll',onScroll,{passive:true});
+
+/* ───────── スクロール出現 ───────── */
+const io=new IntersectionObserver(es=>{
+  es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}});
+},{threshold:.15});
+document.querySelectorAll('.rise').forEach(el=>io.observe(el));
+
+/* ───────── 山場：完了ボタン ───────── */
+let tapped=false;
+document.getElementById('tick').addEventListener('click',e=>{
+  if(tapped)return;tapped=true;
+  document.getElementById('card').classList.add('done');
+  e.currentTarget.textContent='✓';
+  document.getElementById('hint').textContent='';
+  try{
+    const r=e.currentTarget.getBoundingClientRect();
+    burst(r.left+r.width/2,r.top+r.height/2,34);
+    chime();
+    if(navigator.vibrate)navigator.vibrate([18,10,32]);
+    for(let i=0;i<16;i++)setTimeout(()=>comment(true),i*95);
+    setTimeout(()=>burst(innerWidth*.5,innerHeight*.4,26),260);
+    setTimeout(()=>burst(innerWidth*.26,innerHeight*.55,20),470);
+    setTimeout(()=>burst(innerWidth*.74,innerHeight*.5,20),640);
+  }catch(err){}
+  setTimeout(()=>document.getElementById('after').classList.add('show'),1100);
+});
+
+/* ───────── テーマ切替 ───────── */
+const THEMES=[
+  {n:'バイオレット',a:'#7c5cfc',b:'#a78bfa'},
+  {n:'シアン',a:'#20a8d8',b:'#64dcff'},
+  {n:'エメラルド',a:'#28a860',b:'#42d984'},
+  {n:'ゴールド',a:'#d09020',b:'#f0c040'},
+  {n:'クリムゾン',a:'#d84050',b:'#ff7888'},
+  {n:'ピンク',a:'#d84898',b:'#ff88c8'},
+  {n:'ブルー',a:'#3068d8',b:'#70a0ff'},
+  {n:'モノクロ',a:'#8888a8',b:'#ccccdd'},
+  {n:'桜',a:'#e05090',b:'#ffa8cc'},
+  {n:'深海',a:'#1888c8',b:'#50d8f0'},
+  {n:'焔',a:'#e06020',b:'#ffb050'},
+  {n:'ドット',a:'#28b860',b:'#40ff88'},
+];
+const swWrap=document.getElementById('sw');
+THEMES.forEach((t,i)=>{
+  const b=document.createElement('button');
+  b.className='sw'+(i===0?' on':'');
+  b.style.background='linear-gradient(150deg,'+t.a+','+t.b+')';
+  b.textContent=t.n;
+  b.setAttribute('aria-label',t.n+'に変更');
+  b.addEventListener('click',()=>{
+    document.documentElement.style.setProperty('--accent',t.a);
+    document.documentElement.style.setProperty('--accent2',t.b);
+    swWrap.querySelectorAll('.sw').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    const r=b.getBoundingClientRect();
+    burst(r.left+r.width/2,r.top+r.height/2,16);
+    if(navigator.vibrate)navigator.vibrate(8);
+  });
+  swWrap.appendChild(b);
+});
+
+/* ───────── 秘密の開示 ───────── */
+document.querySelectorAll('.hint').forEach(h=>{
+  const open=()=>{
+    if(h.classList.contains('open'))return;
+    h.classList.add('open');
+    const r=h.getBoundingClientRect();
+    burst(r.left+r.width/2,r.top+r.height/2,14);
+    tone(880,.1,.1);
+    if(navigator.vibrate)navigator.vibrate(8);
+  };
+  h.addEventListener('click',open);
+  h.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}});
+});
+
+/* ───────── 最後の一押し ───────── */
+document.getElementById('go').addEventListener('click',()=>{
+  for(let i=0;i<8;i++)setTimeout(()=>comment(true),i*70);
+});
+</script>
+</body>
+</html>
