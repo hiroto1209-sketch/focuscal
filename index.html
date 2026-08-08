@@ -653,6 +653,101 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
   color:var(--muted);font-size:.62rem;cursor:pointer;
 }
 
+/* ═══ DAY COUNTER ═══ */
+.dc-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.dc-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface2);border-radius:12px;padding:12px 13px;
+  position:relative;
+}
+.dc-emoji{font-size:1.3rem;flex-shrink:0;width:30px;text-align:center}
+.dc-body{flex:1;min-width:0}
+.dc-label{font-size:.76rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-num-row{display:flex;align-items:baseline;gap:4px;margin-top:2px}
+.dc-num{font-size:1.3rem;font-weight:800;color:var(--accent2);font-variant-numeric:tabular-nums;line-height:1}
+.dc-unit{font-size:.68rem;color:var(--muted)}
+.dc-date{font-size:.58rem;color:var(--muted);margin-top:2px}
+.dc-del{
+  background:none;border:none;color:#2a2a3e;font-size:.85rem;cursor:pointer;
+  padding:4px 6px;flex-shrink:0;
+}
+.dc-del:active{color:var(--red)}
+#dc-add{
+  width:100%;padding:10px;border-radius:10px;border:1px dashed var(--border2);
+  background:transparent;color:var(--accent2);font-size:.72rem;cursor:pointer;
+}
+.dc-empty{font-size:.68rem;color:#252540;text-align:center;padding:10px 0}
+
+/* 日数カウンター追加フォーム */
+#dc-form-overlay{display:none;position:fixed;inset:0;z-index:90;
+  background:rgba(0,0,0,.78);align-items:center;justify-content:center;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:22px}
+#dc-form-overlay.open{display:flex}
+#dc-form-card{
+  background:var(--surface);border:1px solid var(--border2);border-radius:20px;
+  padding:20px 18px 16px;width:min(340px,92vw);
+}
+#dc-form-card h3{font-size:.86rem;font-weight:700;margin-bottom:14px}
+.dc-f-label{font-size:.6rem;color:var(--muted);letter-spacing:.08em;margin-bottom:6px}
+.dc-f-input{
+  width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;
+  color:var(--text);font-size:.82rem;padding:10px 12px;font-family:inherit;
+  outline:none;margin-bottom:14px;user-select:text;-webkit-user-select:text;
+}
+.dc-f-input:focus{border-color:var(--accent)}
+.dc-emoji-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.dc-emoji-chip{
+  width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border2);
+  background:var(--surface2);font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.dc-emoji-chip.sel{border-color:var(--accent);background:rgba(124,92,252,.14)}
+.dc-f-actions{display:flex;gap:8px}
+#dc-f-save{
+  flex:1;padding:12px;border-radius:10px;border:none;
+  background:linear-gradient(100deg,var(--accent),var(--accent2));
+  color:#fff;font-size:.8rem;font-weight:700;cursor:pointer;
+}
+#dc-f-cancel{
+  padding:12px 16px;border-radius:10px;border:1px solid var(--border2);
+  background:var(--surface2);color:var(--muted);font-size:.74rem;cursor:pointer;
+}
+
+/* ═══ 並び替えモード ═══ */
+.bp-card.reorderable{
+  cursor:grab;transition:transform .18s,box-shadow .18s;
+  touch-action:none;
+}
+.bp-card.reorder-active{
+  border-color:var(--accent)!important;
+  box-shadow:0 8px 28px rgba(0,0,0,.5),0 0 0 1px var(--accent);
+  z-index:50;
+}
+.bp-card.reorder-jiggle{animation:jiggle .26s ease-in-out infinite}
+@keyframes jiggle{
+  0%,100%{transform:rotate(-0.6deg)}
+  50%{transform:rotate(0.6deg)}
+}
+.bp-drag-handle{
+  display:none;width:26px;height:26px;border-radius:8px;
+  background:var(--surface3);color:var(--muted);
+  align-items:center;justify-content:center;font-size:.85rem;
+  flex-shrink:0;cursor:grab;margin-left:auto;
+}
+body.reorder-mode .bp-drag-handle{display:flex}
+body.reorder-mode .bp-card{cursor:default}
+#reorder-done{
+  display:none;width:100%;padding:11px;margin-top:2px;border-radius:11px;
+  border:none;background:linear-gradient(100deg,var(--accent),var(--accent2));
+  color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;
+}
+body.reorder-mode #reorder-done{display:block}
+#reorder-hint{
+  display:none;text-align:center;font-size:.62rem;color:var(--gold);
+  letter-spacing:.05em;margin-bottom:10px;
+}
+body.reorder-mode #reorder-hint{display:block}
+
 /* ═══════════ AGENDA DRAWER ═══════════ */
 #agenda-drawer{
   position:fixed;left:0;right:0;bottom:0;z-index:35;
@@ -1984,6 +2079,22 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
   </div>
 </div>
 
+<div id="dc-form-overlay">
+  <div id="dc-form-card">
+    <h3>📅 日数カウンターを追加</h3>
+    <div class="dc-f-label">なんの日数？</div>
+    <input class="dc-f-input" id="dc-f-title" type="text" placeholder="例：付き合った日" maxlength="20">
+    <div class="dc-f-label">その日はいつ？</div>
+    <input class="dc-f-input" id="dc-f-date" type="date">
+    <div class="dc-f-label">アイコン</div>
+    <div class="dc-emoji-row" id="dc-emoji-row"></div>
+    <div class="dc-f-actions">
+      <button id="dc-f-cancel">キャンセル</button>
+      <button id="dc-f-save">追加する</button>
+    </div>
+  </div>
+</div>
+
 <div id="undo-toast"></div>
 
 <div id="install-banner" class="hidden">
@@ -2865,14 +2976,127 @@ function buildGrid(pageEl,m){
 
 // ═══════════ BOTTOM PANELS ═══════════
 let qmDraft=''; // preserve typing across rebuilds
+const loadCounters=()=>{try{return JSON.parse(localStorage.getItem('fc_counters'))||[]}catch{return[]}};
+const saveCounters=c=>localStorage.setItem('fc_counters',JSON.stringify(c));
+const PANEL_DEFS={focus:'today',memo:'memo',counter:'counter'};
+function loadPanelOrder(){
+  try{
+    const o=JSON.parse(localStorage.getItem('fc_panel_order'));
+    if(Array.isArray(o)&&o.length===3)return o;
+  }catch(e){}
+  return['today','counter','memo'];
+}
+function savePanelOrder(o){localStorage.setItem('fc_panel_order',JSON.stringify(o))}
+let panelOrder=loadPanelOrder();
+
 function buildBottomPanels(){
   const wrap=document.createElement('div');
   wrap.className='bottom-panels';
-  wrap.appendChild(buildTodayFocus());
-  wrap.appendChild(buildQuickMemo());
+  wrap.id='bottom-panels';
+  const builders={today:buildTodayFocus,counter:buildDayCounter,memo:buildQuickMemo};
+  const hint=document.createElement('div');
+  hint.id='reorder-hint';hint.textContent='長押しして並び替え中… ドラッグして順番を変えよう';
+  wrap.appendChild(hint);
+  panelOrder.forEach(key=>{
+    const card=builders[key]();
+    card.dataset.panelKey=key;
+    card.classList.add('reorderable');
+    if(reorderMode)card.classList.add('reorder-jiggle');
+    const handle=document.createElement('div');
+    handle.className='bp-drag-handle';handle.textContent='☰';
+    card.querySelector('.bp-head')?.appendChild(handle);
+    wrap.appendChild(card);
+  });
+  const done=document.createElement('button');
+  done.id='reorder-done';done.textContent='完了';
+  done.onclick=()=>setReorderMode(false);
+  wrap.appendChild(done);
+  enablePanelReorder(wrap);
   return wrap;
 }
 
+// ═══════════ PANEL REORDER（長押しで並び替えモード → ドラッグで入れ替え） ═══════════
+let reorderMode=false;
+function setReorderMode(on){
+  reorderMode=on;
+  document.body.classList.toggle('reorder-mode',on);
+  document.querySelectorAll('.bp-card').forEach(c=>c.classList.toggle('reorder-jiggle',on));
+}
+function enablePanelReorder(container){
+  let pressT=null,dragCard=null,placeholder=null,offsetY=0,moved=false;
+
+  function cardsIn(){return[...container.querySelectorAll('.bp-card')]}
+
+  container.querySelectorAll('.bp-card').forEach(card=>{
+    card.addEventListener('pointerdown',e=>{
+      if(e.target.closest('input,textarea,button:not(.bp-drag-handle)'))return;
+      const onHandle=!!e.target.closest('.bp-drag-handle');
+      if(reorderMode||onHandle){
+        beginDrag(card,e);
+      }else{
+        moved=false;
+        pressT=setTimeout(()=>{
+          if(moved)return;
+          setReorderMode(true);
+          navigator.vibrate?.([15,10,20]);
+        },520);
+        const cancel=()=>{clearTimeout(pressT)};
+        card.addEventListener('pointerup',cancel,{once:true});
+        card.addEventListener('pointercancel',cancel,{once:true});
+      }
+    });
+    card.addEventListener('pointermove',()=>{moved=true;clearTimeout(pressT)});
+  });
+
+  function beginDrag(card,e){
+    dragCard=card;
+    const r=card.getBoundingClientRect();
+    offsetY=e.clientY-r.top;
+    placeholder=document.createElement('div');
+    placeholder.style.cssText=`height:${r.height}px;margin-bottom:10px;`;
+    card.after(placeholder);
+    card.classList.add('reorder-active');
+    card.classList.remove('reorder-jiggle');
+    Object.assign(card.style,{
+      position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',
+      zIndex:'60',pointerEvents:'none',
+    });
+    try{card.setPointerCapture(e.pointerId)}catch(_){}
+    document.addEventListener('pointermove',onMove);
+    document.addEventListener('pointerup',onUp,{once:true});
+    document.addEventListener('pointercancel',onUp,{once:true});
+  }
+  function onMove(e){
+    if(!dragCard)return;
+    dragCard.style.top=(e.clientY-offsetY)+'px';
+    const dragMid=e.clientY;
+    for(const sib of cardsIn()){
+      if(sib===dragCard)continue;
+      const sr=sib.getBoundingClientRect();
+      const mid=sr.top+sr.height/2;
+      if(dragMid<mid&&sib.previousElementSibling!==placeholder){
+        container.insertBefore(placeholder,sib);break;
+      }else if(dragMid>=mid&&sib.nextElementSibling!==placeholder&&sib.nextSibling){
+        container.insertBefore(placeholder,sib.nextSibling);
+      }
+    }
+  }
+  function onUp(){
+    document.removeEventListener('pointermove',onMove);
+    if(!dragCard)return;
+    dragCard.classList.remove('reorder-active');
+    if(reorderMode)dragCard.classList.add('reorder-jiggle');
+    Object.assign(dragCard.style,{
+      position:'',left:'',top:'',width:'',zIndex:'',pointerEvents:'',
+    });
+    container.insertBefore(dragCard,placeholder);
+    placeholder.remove();
+    const order=cardsIn().map(c=>c.dataset.panelKey);
+    panelOrder=order;savePanelOrder(order);
+    dragCard=null;placeholder=null;
+    navigator.vibrate?.(8);
+  }
+}
 function buildTodayFocus(){
   const card=document.createElement('div');card.className='bp-card';
   const md=loadMonth(todayM);
@@ -2915,6 +3139,94 @@ function buildTodayFocus(){
   }
   return card;
 }
+
+function buildDayCounter(){
+  const card=document.createElement('div');card.className='bp-card';
+  const list=loadCounters();
+  const head=document.createElement('div');head.className='bp-head';
+  head.innerHTML=`<div class="bp-title">📅 記念日カウンター</div>
+    <div class="bp-sub">${list.length?`${list.length}件`:''}</div>`;
+  card.appendChild(head);
+
+  const listEl=document.createElement('div');listEl.className='dc-list';
+  if(!list.length){
+    listEl.innerHTML='<div class="dc-empty">まだ記録がありません</div>';
+  }else{
+    const today0=new Date(todayY,todayM,todayD);
+    list.forEach((c,i)=>{
+      const target=new Date(c.date+'T00:00:00');
+      const days=Math.round((today0-target)/86400000);
+      const row=document.createElement('div');row.className='dc-row';
+      const dstr=`${target.getFullYear()}/${target.getMonth()+1}/${target.getDate()}`;
+      row.innerHTML=`
+        <div class="dc-emoji">${c.icon||'📌'}</div>
+        <div class="dc-body">
+          <div class="dc-label">${escHtml(c.title)}</div>
+          <div class="dc-num-row">
+            <span class="dc-num">${days>=0?days:Math.abs(days)}</span>
+            <span class="dc-unit">${days>=0?'日目':'日後'}</span>
+          </div>
+          <div class="dc-date">${dstr}〜</div>
+        </div>
+        <button class="dc-del">✕</button>`;
+      row.querySelector('.dc-del').onclick=e=>{
+        e.stopPropagation();
+        const cs=loadCounters();cs.splice(i,1);saveCounters(cs);refreshPages();
+      };
+      listEl.appendChild(row);
+    });
+  }
+  card.appendChild(listEl);
+
+  const addBtn=document.createElement('button');
+  addBtn.id='dc-add';addBtn.textContent='＋ カウンターを追加';
+  addBtn.onclick=e=>{e.stopPropagation();openDcForm()};
+  card.appendChild(addBtn);
+  return card;
+}
+
+const DC_EMOJIS=['📅','💕','💉','🎂','💊','🏃','📚','💰','🚭','✈️','🏠','🎯'];
+let dcEmojiSel='📅';
+function openDcForm(){
+  document.getElementById('dc-f-title').value='';
+  const today=new Date();
+  document.getElementById('dc-f-date').value=
+    `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  dcEmojiSel='📅';
+  const row=document.getElementById('dc-emoji-row');row.innerHTML='';
+  DC_EMOJIS.forEach(e=>{
+    const b=document.createElement('button');
+    b.className='dc-emoji-chip'+(e===dcEmojiSel?' sel':'');
+    b.type='button';b.textContent=e;
+    b.onclick=()=>{
+      dcEmojiSel=e;
+      row.querySelectorAll('.dc-emoji-chip').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+    };
+    row.appendChild(b);
+  });
+  document.getElementById('dc-form-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('dc-f-title').focus(),80);
+}
+document.getElementById('dc-f-cancel').onclick=()=>
+  document.getElementById('dc-form-overlay').classList.remove('open');
+document.getElementById('dc-form-overlay').onclick=e=>{
+  if(e.target.id==='dc-form-overlay')document.getElementById('dc-form-overlay').classList.remove('open');
+};
+document.getElementById('dc-f-save').onclick=()=>{
+  const title=document.getElementById('dc-f-title').value.trim();
+  const date=document.getElementById('dc-f-date').value;
+  if(!title||!date){
+    if(!title)document.getElementById('dc-f-title').focus();
+    return;
+  }
+  const cs=loadCounters();
+  cs.push({id:Date.now(),title,date,icon:dcEmojiSel});
+  saveCounters(cs);
+  document.getElementById('dc-form-overlay').classList.remove('open');
+  refreshPages();
+  navigator.vibrate?.(8);
+};
 
 function buildQuickMemo(){
   const card=document.createElement('div');card.className='bp-card';
@@ -3567,6 +3879,7 @@ let sx=null,sy=null,swp=false;
 const wrapEl=document.getElementById('slider-wrap');
 let lastDx=0;
 wrapEl.addEventListener('pointerdown',e=>{
+  if(reorderMode){sx=null;return}
   if(e.target.closest('input,button,textarea')){sx=null;return}
   if(e.target.closest('.month-page')){
     sx=e.clientX;sy=e.clientY;swp=false;lastDx=0;
@@ -3837,6 +4150,8 @@ function collectAllData(){
     settings:JSON.parse(localStorage.getItem('fc_settings')||'null'),
     stats:JSON.parse(localStorage.getItem('fc_stats')||'null'),
     memos:JSON.parse(localStorage.getItem('fc_memos')||'null'),
+    counters:JSON.parse(localStorage.getItem('fc_counters')||'null'),
+    panelOrder:JSON.parse(localStorage.getItem('fc_panel_order')||'null'),
     months:{},fitness:{},
   };
   for(let m=0;m<12;m++){
@@ -3950,6 +4265,9 @@ document.getElementById('bk-do-restore').onclick=()=>{
     if(d.settings)localStorage.setItem('fc_settings',JSON.stringify(d.settings));
     if(d.stats)localStorage.setItem('fc_stats',JSON.stringify(d.stats));
     if(d.memos)localStorage.setItem('fc_memos',JSON.stringify(d.memos));
+    if(d.counters)localStorage.setItem('fc_counters',JSON.stringify(d.counters));
+    if(d.panelOrder)localStorage.setItem('fc_panel_order',JSON.stringify(d.panelOrder));
+    if(d.panelOrder)panelOrder=loadPanelOrder();
     // メモリ上の状態も更新
     settings=loadSettings();stats=loadStats();
     applyBgTint();applyTheme();renderDayLabels();
