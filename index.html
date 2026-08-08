@@ -169,11 +169,42 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
   padding:calc(var(--safe-t) + 10px) 14px 0;
   background:linear-gradient(180deg,var(--bg) 78%,transparent);
 }
-#header-row{display:flex;align-items:center;gap:7px;padding-bottom:9px}
+#header-row{display:flex;align-items:center;gap:7px;padding-bottom:9px;position:relative}
 #month-display{
   flex:1;text-align:center;font-size:1.3rem;font-weight:300;letter-spacing:.14em;
 }
-#month-display .yr{font-size:.6rem;color:var(--muted);display:block;letter-spacing:.2em;line-height:1}
+#month-display .yr{
+  font-size:.6rem;color:var(--muted);display:block;letter-spacing:.2em;line-height:1;
+  cursor:pointer;padding:2px 0;
+}
+#month-display .yr:active{color:var(--accent2)}
+
+/* ═══ 年切り替え ═══ */
+#year-picker{
+  display:none;position:absolute;left:50%;top:calc(100% + 4px);
+  transform:translateX(-50%);z-index:32;
+  background:var(--surface);border:1px solid var(--border2);border-radius:14px;
+  padding:6px;align-items:center;gap:4px;
+  box-shadow:0 8px 26px rgba(0,0,0,.5);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+}
+#year-picker.open{display:flex;animation:yrPop .18s ease-out}
+@keyframes yrPop{from{opacity:0;transform:translateX(-50%) translateY(-6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.yr-arrow{
+  width:28px;height:28px;border-radius:8px;border:none;background:var(--surface2);
+  color:var(--text2);font-size:.9rem;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.yr-arrow:active{background:var(--accent);color:#fff}
+.yr-arrow:disabled{opacity:.3;pointer-events:none}
+#yr-list{display:flex;gap:4px}
+.yr-chip{
+  padding:7px 12px;border-radius:9px;border:none;background:transparent;
+  color:var(--text2);font-size:.8rem;font-weight:600;cursor:pointer;
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.yr-chip.active{background:var(--accent);color:#fff}
+.yr-chip:active{background:var(--surface3)}
 .nav-btn{
   width:34px;height:34px;border-radius:50%;
   border:1px solid var(--border2);background:var(--surface);color:var(--text2);
@@ -713,29 +744,24 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
   background:var(--surface2);color:var(--muted);font-size:.74rem;cursor:pointer;
 }
 
-/* ═══ 並び替えモード ═══ */
-.bp-card.reorderable{
-  cursor:grab;transition:transform .18s,box-shadow .18s;
-  touch-action:none;
+/* ═══ 並び替えモード（↑↓ボタン方式） ═══ */
+.bp-card.reorderable{transition:box-shadow .2s}
+body.reorder-mode .bp-card.reorderable{
+  box-shadow:0 0 0 1.5px var(--accent),0 6px 20px rgba(0,0,0,.35);
 }
-.bp-card.reorder-active{
-  border-color:var(--accent)!important;
-  box-shadow:0 8px 28px rgba(0,0,0,.5),0 0 0 1px var(--accent);
-  z-index:50;
+.bp-reorder-ctrl{
+  display:none;gap:4px;margin-left:auto;flex-shrink:0;
 }
-.bp-card.reorder-jiggle{animation:jiggle .26s ease-in-out infinite}
-@keyframes jiggle{
-  0%,100%{transform:rotate(-0.6deg)}
-  50%{transform:rotate(0.6deg)}
+body.reorder-mode .bp-reorder-ctrl{display:flex}
+.bp-move-btn{
+  width:28px;height:28px;border-radius:8px;
+  background:var(--surface3);border:1px solid var(--border2);
+  color:var(--text2);font-size:.85rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,opacity .15s;
 }
-.bp-drag-handle{
-  display:none;width:26px;height:26px;border-radius:8px;
-  background:var(--surface3);color:var(--muted);
-  align-items:center;justify-content:center;font-size:.85rem;
-  flex-shrink:0;cursor:grab;margin-left:auto;
-}
-body.reorder-mode .bp-drag-handle{display:flex}
-body.reorder-mode .bp-card{cursor:default}
+.bp-move-btn:active{background:var(--accent);color:#fff}
+.bp-move-btn:disabled{opacity:.25;pointer-events:none}
 #reorder-done{
   display:none;width:100%;padding:11px;margin-top:2px;border-radius:11px;
   border:none;background:linear-gradient(100deg,var(--accent),var(--accent2));
@@ -1559,6 +1585,11 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
     <button class="nav-btn" id="btn-today">今日</button>
     <button class="nav-btn" id="btn-prev">‹</button>
     <div id="month-display"></div>
+    <div id="year-picker">
+      <button class="yr-arrow" id="yr-prev" aria-label="前の年">‹</button>
+      <div id="yr-list"></div>
+      <button class="yr-arrow" id="yr-next" aria-label="次の年">›</button>
+    </div>
     <button class="nav-btn" id="btn-next">›</button>
     <button class="nav-btn" id="btn-undo" title="元に戻す">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
@@ -2107,7 +2138,12 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
 <script>
 'use strict';
 // ═══════════ CONSTANTS ═══════════
-const YEAR=2026;
+const loadYear=()=>{
+  const y=parseInt(localStorage.getItem('fc_active_year'),10);
+  return(y>=2022&&y<=2030)?y:new Date().getFullYear();
+};
+let YEAR=loadYear();
+const YEAR_MIN=2022,YEAR_MAX=2030;
 const MJP=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 const DAYS_SUN=['日','月','火','水','木','金','土'];
 const DAYS_MON=['月','火','水','木','金','土','日'];
@@ -2994,108 +3030,75 @@ function buildBottomPanels(){
   wrap.className='bottom-panels';
   wrap.id='bottom-panels';
   const builders={today:buildTodayFocus,counter:buildDayCounter,memo:buildQuickMemo};
+  const labels={today:'今日のフォーカス',counter:'記念日カウンター',memo:'クイックメモ'};
+
   const hint=document.createElement('div');
-  hint.id='reorder-hint';hint.textContent='長押しして並び替え中… ドラッグして順番を変えよう';
+  hint.id='reorder-hint';
+  hint.textContent='↑↓ で順番を変えられます';
   wrap.appendChild(hint);
-  panelOrder.forEach(key=>{
+
+  panelOrder.forEach((key,idx)=>{
     const card=builders[key]();
     card.dataset.panelKey=key;
     card.classList.add('reorderable');
-    if(reorderMode)card.classList.add('reorder-jiggle');
-    const handle=document.createElement('div');
-    handle.className='bp-drag-handle';handle.textContent='☰';
-    card.querySelector('.bp-head')?.appendChild(handle);
+
+    const ctrl=document.createElement('div');
+    ctrl.className='bp-reorder-ctrl';
+    const up=document.createElement('button');
+    up.className='bp-move-btn';up.textContent='↑';
+    up.disabled=idx===0;
+    up.setAttribute('aria-label',labels[key]+'を上へ');
+    up.onclick=e=>{e.stopPropagation();movePanel(key,-1)};
+    const down=document.createElement('button');
+    down.className='bp-move-btn';down.textContent='↓';
+    down.disabled=idx===panelOrder.length-1;
+    down.setAttribute('aria-label',labels[key]+'を下へ');
+    down.onclick=e=>{e.stopPropagation();movePanel(key,1)};
+    ctrl.appendChild(up);ctrl.appendChild(down);
+    card.querySelector('.bp-head')?.appendChild(ctrl);
+
+    // 長押しで並び替えモードのON/OFFを切り替え
+    let pressT=null,moved=false;
+    card.addEventListener('pointerdown',e=>{
+      if(e.target.closest('input,textarea,button'))return;
+      moved=false;
+      pressT=setTimeout(()=>{
+        if(moved)return;
+        setReorderMode(!reorderMode);
+        navigator.vibrate?.([15,10,20]);
+      },520);
+      const cancel=()=>clearTimeout(pressT);
+      card.addEventListener('pointerup',cancel,{once:true});
+      card.addEventListener('pointercancel',cancel,{once:true});
+    });
+    card.addEventListener('pointermove',()=>{moved=true;clearTimeout(pressT)});
+
     wrap.appendChild(card);
   });
+
   const done=document.createElement('button');
-  done.id='reorder-done';done.textContent='完了';
+  done.id='reorder-done';done.textContent='並び替えを終わる';
   done.onclick=()=>setReorderMode(false);
   wrap.appendChild(done);
-  enablePanelReorder(wrap);
+
   return wrap;
 }
 
-// ═══════════ PANEL REORDER（長押しで並び替えモード → ドラッグで入れ替え） ═══════════
+function movePanel(key,dir){
+  const i=panelOrder.indexOf(key);
+  const j=i+dir;
+  if(i<0||j<0||j>=panelOrder.length)return;
+  [panelOrder[i],panelOrder[j]]=[panelOrder[j],panelOrder[i]];
+  savePanelOrder(panelOrder);
+  navigator.vibrate?.(8);
+  refreshPages();
+}
+
+// ═══════════ PANEL REORDER MODE（表示切り替えのみ・シンプル） ═══════════
 let reorderMode=false;
 function setReorderMode(on){
   reorderMode=on;
   document.body.classList.toggle('reorder-mode',on);
-  document.querySelectorAll('.bp-card').forEach(c=>c.classList.toggle('reorder-jiggle',on));
-}
-function enablePanelReorder(container){
-  let pressT=null,dragCard=null,placeholder=null,offsetY=0,moved=false;
-
-  function cardsIn(){return[...container.querySelectorAll('.bp-card')]}
-
-  container.querySelectorAll('.bp-card').forEach(card=>{
-    card.addEventListener('pointerdown',e=>{
-      if(e.target.closest('input,textarea,button:not(.bp-drag-handle)'))return;
-      const onHandle=!!e.target.closest('.bp-drag-handle');
-      if(reorderMode||onHandle){
-        beginDrag(card,e);
-      }else{
-        moved=false;
-        pressT=setTimeout(()=>{
-          if(moved)return;
-          setReorderMode(true);
-          navigator.vibrate?.([15,10,20]);
-        },520);
-        const cancel=()=>{clearTimeout(pressT)};
-        card.addEventListener('pointerup',cancel,{once:true});
-        card.addEventListener('pointercancel',cancel,{once:true});
-      }
-    });
-    card.addEventListener('pointermove',()=>{moved=true;clearTimeout(pressT)});
-  });
-
-  function beginDrag(card,e){
-    dragCard=card;
-    const r=card.getBoundingClientRect();
-    offsetY=e.clientY-r.top;
-    placeholder=document.createElement('div');
-    placeholder.style.cssText=`height:${r.height}px;margin-bottom:10px;`;
-    card.after(placeholder);
-    card.classList.add('reorder-active');
-    card.classList.remove('reorder-jiggle');
-    Object.assign(card.style,{
-      position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',
-      zIndex:'60',pointerEvents:'none',
-    });
-    try{card.setPointerCapture(e.pointerId)}catch(_){}
-    document.addEventListener('pointermove',onMove);
-    document.addEventListener('pointerup',onUp,{once:true});
-    document.addEventListener('pointercancel',onUp,{once:true});
-  }
-  function onMove(e){
-    if(!dragCard)return;
-    dragCard.style.top=(e.clientY-offsetY)+'px';
-    const dragMid=e.clientY;
-    for(const sib of cardsIn()){
-      if(sib===dragCard)continue;
-      const sr=sib.getBoundingClientRect();
-      const mid=sr.top+sr.height/2;
-      if(dragMid<mid&&sib.previousElementSibling!==placeholder){
-        container.insertBefore(placeholder,sib);break;
-      }else if(dragMid>=mid&&sib.nextElementSibling!==placeholder&&sib.nextSibling){
-        container.insertBefore(placeholder,sib.nextSibling);
-      }
-    }
-  }
-  function onUp(){
-    document.removeEventListener('pointermove',onMove);
-    if(!dragCard)return;
-    dragCard.classList.remove('reorder-active');
-    if(reorderMode)dragCard.classList.add('reorder-jiggle');
-    Object.assign(dragCard.style,{
-      position:'',left:'',top:'',width:'',zIndex:'',pointerEvents:'',
-    });
-    container.insertBefore(dragCard,placeholder);
-    placeholder.remove();
-    const order=cardsIn().map(c=>c.dataset.panelKey);
-    panelOrder=order;savePanelOrder(order);
-    dragCard=null;placeholder=null;
-    navigator.vibrate?.(8);
-  }
 }
 function buildTodayFocus(){
   const card=document.createElement('div');card.className='bp-card';
@@ -3872,9 +3875,63 @@ function renderM(el,m){if(m<0||m>11){el.innerHTML='';return}buildGrid(el,m)}
 function refreshPages(){renderM(pPrev,curMonth-1);renderM(pCur,curMonth);renderM(pNext,curMonth+1)}
 function goTo(m){
   if(m<0||m>11)return;curMonth=m;
-  document.getElementById('month-display').innerHTML=`<span class="yr">${YEAR}</span>${MJP[m]}`;
+  document.getElementById('month-display').innerHTML=`<span class="yr" id="yr-label">${YEAR}</span>${MJP[m]}`;
   refreshPages();setPos(-W(),false);updateDots();updateAll();
+  bindYearLabel();
 }
+
+// ═══════════ 年切り替え ═══════════
+function switchYear(y){
+  if(y<YEAR_MIN||y>YEAR_MAX||y===YEAR)return;
+  YEAR=y;
+  localStorage.setItem('fc_active_year',String(y));
+  undoStack.length=0;redoStack.length=0;updateUndoBtn();
+  // 表示月：切り替え先の年に今日があればその月、なければ1月
+  curMonth=(YEAR===todayY)?todayM:0;
+  goTo(curMonth);
+  closeYearPicker();
+  navigator.vibrate?.(8);
+}
+function renderYearPicker(){
+  const list=document.getElementById('yr-list');
+  list.innerHTML='';
+  for(let y=YEAR_MIN;y<=YEAR_MAX;y++){
+    const b=document.createElement('button');
+    b.className='yr-chip'+(y===YEAR?' active':'');
+    b.textContent=y;
+    b.onclick=()=>switchYear(y);
+    list.appendChild(b);
+  }
+  document.getElementById('yr-prev').disabled=YEAR<=YEAR_MIN;
+  document.getElementById('yr-next').disabled=YEAR>=YEAR_MAX;
+}
+function openYearPicker(){
+  renderYearPicker();
+  document.getElementById('year-picker').classList.add('open');
+  // 選択中の年チップを中央に見せる
+  const active=document.querySelector('.yr-chip.active');
+  if(active)active.scrollIntoView({block:'nearest',inline:'center'});
+}
+function closeYearPicker(){
+  document.getElementById('year-picker').classList.remove('open');
+}
+document.getElementById('yr-prev').onclick=()=>switchYear(YEAR-1);
+document.getElementById('yr-next').onclick=()=>switchYear(YEAR+1);
+document.addEventListener('pointerdown',e=>{
+  const yp=document.getElementById('year-picker');
+  if(yp.classList.contains('open')&&!yp.contains(e.target)&&e.target.id!=='yr-label'){
+    closeYearPicker();
+  }
+});
+function bindYearLabel(){
+  const el=document.getElementById('yr-label');
+  if(el)el.onclick=e=>{
+    e.stopPropagation();
+    const yp=document.getElementById('year-picker');
+    yp.classList.contains('open')?closeYearPicker():openYearPicker();
+  };
+}
+
 let sx=null,sy=null,swp=false;
 const wrapEl=document.getElementById('slider-wrap');
 let lastDx=0;
@@ -4924,7 +4981,8 @@ function init(){
     }
   }catch(e){}
   renderDayLabels();layout();
-  document.getElementById('month-display').innerHTML=`<span class="yr">${YEAR}</span>${MJP[curMonth]}`;
+  document.getElementById('month-display').innerHTML=`<span class="yr" id="yr-label">${YEAR}</span>${MJP[curMonth]}`;
+  bindYearLabel();
   setPos(-W(),false);updateDots();refreshPages();updateAll();
   checkAch();renderSlider();updateUndoBtn();
   maybeShowOnboarding();
