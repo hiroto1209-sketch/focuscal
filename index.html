@@ -187,6 +187,7 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
   padding:6px;align-items:center;gap:4px;
   box-shadow:0 8px 26px rgba(0,0,0,.5);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  max-width:calc(100vw - 24px); /* 画面幅からはみ出さない */
 }
 #year-picker.open{display:flex;animation:yrPop .18s ease-out}
 @keyframes yrPop{from{opacity:0;transform:translateX(-50%) translateY(-6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
@@ -197,11 +198,16 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
 }
 .yr-arrow:active{background:var(--accent);color:#fff}
 .yr-arrow:disabled{opacity:.3;pointer-events:none}
-#yr-list{display:flex;gap:4px}
+#yr-list{
+  display:flex;gap:4px;overflow-x:auto;scroll-snap-type:x proximity;
+  -webkit-overflow-scrolling:touch;max-width:min(280px,calc(100vw - 100px));
+}
+#yr-list::-webkit-scrollbar{display:none}
 .yr-chip{
   padding:7px 12px;border-radius:9px;border:none;background:transparent;
   color:var(--text2);font-size:.8rem;font-weight:600;cursor:pointer;
-  font-variant-numeric:tabular-nums;white-space:nowrap;
+  font-variant-numeric:tabular-nums;white-space:nowrap;flex-shrink:0;
+  scroll-snap-align:center;
 }
 .yr-chip.active{background:var(--accent);color:#fff}
 .yr-chip:active{background:var(--surface3)}
@@ -687,22 +693,27 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
 /* ═══ DAY COUNTER ═══ */
 .dc-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
 .dc-row{
-  display:flex;align-items:center;gap:12px;
+  display:flex;align-items:center;gap:10px;
   background:var(--surface2);border-radius:12px;padding:12px 13px;
-  position:relative;
+  position:relative;cursor:pointer;
 }
 .dc-emoji{font-size:1.3rem;flex-shrink:0;width:30px;text-align:center}
-.dc-body{flex:1;min-width:0}
+.dc-body{flex:1;min-width:0;overflow:hidden}
 .dc-label{font-size:.76rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dc-num-row{display:flex;align-items:baseline;gap:4px;margin-top:2px}
+.dc-num-row{display:flex;align-items:baseline;gap:4px;margin-top:2px;flex-wrap:wrap}
 .dc-num{font-size:1.3rem;font-weight:800;color:var(--accent2);font-variant-numeric:tabular-nums;line-height:1}
 .dc-unit{font-size:.68rem;color:var(--muted)}
-.dc-date{font-size:.58rem;color:var(--muted);margin-top:2px}
-.dc-del{
-  background:none;border:none;color:#2a2a3e;font-size:.85rem;cursor:pointer;
-  padding:4px 6px;flex-shrink:0;
+.dc-date{
+  font-size:.58rem;color:var(--muted);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
 }
-.dc-del:active{color:var(--red)}
+.dc-actions{display:flex;gap:2px;flex-shrink:0}
+.dc-edit,.dc-del{
+  background:none;border:none;color:#3a3a5a;font-size:.8rem;cursor:pointer;
+  padding:6px;flex-shrink:0;border-radius:8px;
+}
+.dc-edit:active{color:var(--accent2);background:rgba(124,92,252,.14)}
+.dc-del:active{color:var(--red);background:rgba(240,80,96,.14)}
 #dc-add{
   width:100%;padding:10px;border-radius:10px;border:1px dashed var(--border2);
   background:transparent;color:var(--accent2);font-size:.72rem;cursor:pointer;
@@ -3171,7 +3182,13 @@ function buildDayCounter(){
           </div>
           <div class="dc-date">${dstr}〜</div>
         </div>
-        <button class="dc-del">✕</button>`;
+        <div class="dc-actions">
+          <button class="dc-edit" aria-label="編集">✎</button>
+          <button class="dc-del" aria-label="削除">✕</button>
+        </div>`;
+      const openEdit=e=>{e.stopPropagation();openDcForm(i)};
+      row.onclick=openEdit;
+      row.querySelector('.dc-edit').onclick=openEdit;
       row.querySelector('.dc-del').onclick=e=>{
         e.stopPropagation();
         const cs=loadCounters();cs.splice(i,1);saveCounters(cs);refreshPages();
@@ -3190,12 +3207,22 @@ function buildDayCounter(){
 
 const DC_EMOJIS=['📅','💕','💉','🎂','💊','🏃','📚','💰','🚭','✈️','🏠','🎯'];
 let dcEmojiSel='📅';
-function openDcForm(){
-  document.getElementById('dc-f-title').value='';
+let dcEditIdx=null; // nullなら新規追加、数値なら編集対象のインデックス
+function openDcForm(idx){
+  dcEditIdx=(typeof idx==='number')?idx:null;
+  const list=loadCounters();
+  const editing=dcEditIdx!==null?list[dcEditIdx]:null;
+
+  document.querySelector('#dc-form-card h3').textContent=
+    editing?'📅 日数カウンターを編集':'📅 日数カウンターを追加';
+  document.getElementById('dc-f-save').textContent=editing?'更新する':'追加する';
+
+  document.getElementById('dc-f-title').value=editing?editing.title:'';
   const today=new Date();
-  document.getElementById('dc-f-date').value=
+  document.getElementById('dc-f-date').value=editing?editing.date:
     `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-  dcEmojiSel='📅';
+  dcEmojiSel=editing?(editing.icon||'📅'):'📅';
+
   const row=document.getElementById('dc-emoji-row');row.innerHTML='';
   DC_EMOJIS.forEach(e=>{
     const b=document.createElement('button');
@@ -3208,6 +3235,28 @@ function openDcForm(){
     };
     row.appendChild(b);
   });
+
+  // 編集時は削除ボタンも出す
+  let delBtn=document.getElementById('dc-f-delete');
+  if(editing){
+    if(!delBtn){
+      delBtn=document.createElement('button');
+      delBtn.id='dc-f-delete';
+      delBtn.className='dc-c-btn';
+      delBtn.style.cssText='width:100%;background:none;border:none;color:var(--red);font-size:.72rem;padding:10px;margin-top:4px;cursor:pointer';
+      delBtn.textContent='このカウンターを削除';
+      document.getElementById('dc-form-card').appendChild(delBtn);
+    }
+    delBtn.style.display='block';
+    delBtn.onclick=()=>{
+      const cs=loadCounters();cs.splice(dcEditIdx,1);saveCounters(cs);
+      document.getElementById('dc-form-overlay').classList.remove('open');
+      refreshPages();navigator.vibrate?.(8);
+    };
+  }else if(delBtn){
+    delBtn.style.display='none';
+  }
+
   document.getElementById('dc-form-overlay').classList.add('open');
   setTimeout(()=>document.getElementById('dc-f-title').focus(),80);
 }
@@ -3224,9 +3273,14 @@ document.getElementById('dc-f-save').onclick=()=>{
     return;
   }
   const cs=loadCounters();
-  cs.push({id:Date.now(),title,date,icon:dcEmojiSel});
+  if(dcEditIdx!==null&&cs[dcEditIdx]){
+    cs[dcEditIdx]={...cs[dcEditIdx],title,date,icon:dcEmojiSel};
+  }else{
+    cs.push({id:Date.now(),title,date,icon:dcEmojiSel});
+  }
   saveCounters(cs);
   document.getElementById('dc-form-overlay').classList.remove('open');
+  dcEditIdx=null;
   refreshPages();
   navigator.vibrate?.(8);
 };
@@ -3980,7 +4034,11 @@ document.addEventListener('visibilitychange',()=>{
 document.getElementById('btn-prev').onclick=()=>curMonth>0&&goTo(curMonth-1);
 document.getElementById('btn-next').onclick=()=>curMonth<11&&goTo(curMonth+1);
 document.getElementById('btn-today').onclick=()=>{
-  if(todayY===YEAR){goTo(todayM);navigator.vibrate?.(10)}
+  if(YEAR!==todayY){
+    switchYear(todayY); // 年をまたいでいる場合は先に今日の年へ
+  }else{
+    goTo(todayM);navigator.vibrate?.(10);
+  }
   secretTap();
 };
 // ═══ 隠しコマンド①：「今日」を7連打 → 🌌ギャラクシーテーマ解放 ═══
