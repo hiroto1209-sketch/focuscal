@@ -700,8 +700,15 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
 .dc-emoji{font-size:1.3rem;flex-shrink:0;width:30px;text-align:center}
 .dc-body{flex:1;min-width:0;overflow:hidden}
 .dc-label{font-size:.76rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dc-num-row{display:flex;align-items:baseline;gap:4px;margin-top:2px;flex-wrap:wrap}
-.dc-num{font-size:1.3rem;font-weight:800;color:var(--accent2);font-variant-numeric:tabular-nums;line-height:1}
+.dc-num-row{
+  display:flex;align-items:baseline;gap:4px;margin-top:2px;
+  min-height:1.3rem;line-height:1;
+}
+.dc-num{
+  font-size:1.3rem;font-weight:800;color:var(--accent2);
+  font-variant-numeric:tabular-nums;line-height:1;
+  display:inline-block;
+}
 .dc-unit{font-size:.68rem;color:var(--muted)}
 .dc-date{
   font-size:.58rem;color:var(--muted);margin-top:2px;
@@ -737,6 +744,15 @@ body.th-matrix #crt-lines{display:block;animation:crtRoll 8s linear infinite}
   outline:none;margin-bottom:14px;user-select:text;-webkit-user-select:text;
 }
 .dc-f-input:focus{border-color:var(--accent)}
+#dc-date-row{display:flex;gap:7px;margin-bottom:14px}
+.dc-date-sel{
+  flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;
+  color:var(--text);font-size:.82rem;padding:10px 6px;font-family:inherit;
+  outline:none;text-align:center;text-align-last:center;
+  -webkit-appearance:none;appearance:none;
+  font-variant-numeric:tabular-nums;
+}
+.dc-date-sel:focus{border-color:var(--accent)}
 .dc-emoji-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .dc-emoji-chip{
   width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border2);
@@ -2127,7 +2143,11 @@ body.typing #fab-cluster{opacity:.25;pointer-events:none;transition:opacity .2s}
     <div class="dc-f-label">なんの日数？</div>
     <input class="dc-f-input" id="dc-f-title" type="text" placeholder="例：付き合った日" maxlength="20">
     <div class="dc-f-label">その日はいつ？</div>
-    <input class="dc-f-input" id="dc-f-date" type="date">
+    <div id="dc-date-row">
+      <select id="dc-f-y" class="dc-date-sel"></select>
+      <select id="dc-f-m" class="dc-date-sel"></select>
+      <select id="dc-f-d" class="dc-date-sel"></select>
+    </div>
     <div class="dc-f-label">アイコン</div>
     <div class="dc-emoji-row" id="dc-emoji-row"></div>
     <div class="dc-f-actions">
@@ -3111,6 +3131,12 @@ function setReorderMode(on){
   reorderMode=on;
   document.body.classList.toggle('reorder-mode',on);
 }
+// 並び替え中は、パネルの外（カレンダーや余白など）をタップしたら終了する
+document.addEventListener('pointerdown',e=>{
+  if(!reorderMode)return;
+  if(e.target.closest('.bp-card,#reorder-done'))return;
+  setReorderMode(false);
+},true);
 function buildTodayFocus(){
   const card=document.createElement('div');card.className='bp-card';
   const md=loadMonth(todayM);
@@ -3205,6 +3231,55 @@ function buildDayCounter(){
   return card;
 }
 
+
+function dcDaysInMonth(y,m){return new Date(y,m+1,0).getDate()}
+function buildDcDateSelects(){
+  const ySel=document.getElementById('dc-f-y');
+  const mSel=document.getElementById('dc-f-m');
+  const dSel=document.getElementById('dc-f-d');
+  if(!ySel.options.length){
+    const curY=new Date().getFullYear();
+    for(let y=curY-6;y<=curY+1;y++){
+      const o=document.createElement('option');o.value=y;o.textContent=y+'年';
+      ySel.appendChild(o);
+    }
+    for(let m=0;m<12;m++){
+      const o=document.createElement('option');o.value=m;o.textContent=(m+1)+'月';
+      mSel.appendChild(o);
+    }
+  }
+  refreshDcDaySelect();
+  ySel.onchange=refreshDcDaySelect;
+  mSel.onchange=refreshDcDaySelect;
+}
+function refreshDcDaySelect(){
+  const y=+document.getElementById('dc-f-y').value;
+  const m=+document.getElementById('dc-f-m').value;
+  const dSel=document.getElementById('dc-f-d');
+  const keep=+dSel.value||1;
+  const max=dcDaysInMonth(y,m);
+  dSel.innerHTML='';
+  for(let d=1;d<=max;d++){
+    const o=document.createElement('option');o.value=d;o.textContent=d+'日';
+    dSel.appendChild(o);
+  }
+  dSel.value=Math.min(keep,max);
+}
+function setDcDateSelects(dateStr){
+  const[y,m,d]=dateStr.split('-').map(Number);
+  buildDcDateSelects();
+  document.getElementById('dc-f-y').value=y;
+  document.getElementById('dc-f-m').value=m-1;
+  refreshDcDaySelect();
+  document.getElementById('dc-f-d').value=d;
+}
+function getDcDateValue(){
+  const y=document.getElementById('dc-f-y').value;
+  const m=String(+document.getElementById('dc-f-m').value+1).padStart(2,'0');
+  const d=String(+document.getElementById('dc-f-d').value).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+
 const DC_EMOJIS=['📅','💕','💉','🎂','💊','🏃','📚','💰','🚭','✈️','🏠','🎯'];
 let dcEmojiSel='📅';
 let dcEditIdx=null; // nullなら新規追加、数値なら編集対象のインデックス
@@ -3219,8 +3294,9 @@ function openDcForm(idx){
 
   document.getElementById('dc-f-title').value=editing?editing.title:'';
   const today=new Date();
-  document.getElementById('dc-f-date').value=editing?editing.date:
+  const initDate=editing?editing.date:
     `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  setDcDateSelects(initDate);
   dcEmojiSel=editing?(editing.icon||'📅'):'📅';
 
   const row=document.getElementById('dc-emoji-row');row.innerHTML='';
@@ -3267,9 +3343,9 @@ document.getElementById('dc-form-overlay').onclick=e=>{
 };
 document.getElementById('dc-f-save').onclick=()=>{
   const title=document.getElementById('dc-f-title').value.trim();
-  const date=document.getElementById('dc-f-date').value;
-  if(!title||!date){
-    if(!title)document.getElementById('dc-f-title').focus();
+  const date=getDcDateValue();
+  if(!title){
+    document.getElementById('dc-f-title').focus();
     return;
   }
   const cs=loadCounters();
