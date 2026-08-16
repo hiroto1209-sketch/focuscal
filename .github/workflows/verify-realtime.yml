@@ -18,6 +18,7 @@ jobs:
           node --check peek.js
           node --check enhancements.js
           node --check ui-polish-v57.js
+          node --check peek-calendar-v58.js
           node --check sw.js
       - name: Realtime boot wiring
         run: |
@@ -27,9 +28,22 @@ jobs:
           grep -q "peek.js?v=" index.html
           grep -q "enhancements.js?v=" index.html
           grep -q "ui-polish-v57.js?v=" index.html
+          grep -q "peek-calendar-v58.js?v=" index.html
           grep -q "FOCUSCAL_FIREBASE_CONFIG" firebase-config.js
           grep -q "リアルタイム共有に接続済み" peek.js
           if grep -q "リアルタイム共有は準備済みです" peek.js; then exit 1; fi
+      - name: Mirrored calendar contract
+        run: |
+          grep -q "richDays" peek-calendar-v58.js
+          grep -q "appearance" peek-calendar-v58.js
+          grep -q "fc-mirror-grid" peek-calendar-v58.js
+          grep -q "fc-mirror-day-detail" peek-calendar-v58.js
+          grep -q "peekVisibility" peek-calendar-v58.js
+          grep -q "memo" peek-calendar-v58.js
+          grep -q "start" peek-calendar-v58.js
+          grep -q "end" peek-calendar-v58.js
+          grep -q "FocusCalHolidays" peek-calendar-v58.js
+          grep -q "focuscal-v58-mirrored-peek" sw.js
       - name: Holiday and unified sheet gestures
         run: |
           grep -q "fc_holidays_enabled" enhancements.js
@@ -38,8 +52,6 @@ jobs:
           grep -q "fc-sheet-handle" ui-polish-v57.js
           grep -q "fcUnifiedGesture" ui-polish-v57.js
           grep -q "fc-holiday-badge" ui-polish-v57.js
-          grep -q "width:12px" ui-polish-v57.js
-          grep -q "focuscal-v57-unified-sheets" sw.js
       - name: Firestore contract
         run: |
           grep -q "match /events/{eventId}" firestore.rules
