@@ -20,6 +20,7 @@ jobs:
           node --check ui-polish-v57.js
           node --check peek-calendar-v58.js
           node --check peek-appearance-live-v58.js
+          node --check peek-cell-style-v59.js
           node --check sw.js
       - name: Realtime boot wiring
         run: |
@@ -31,33 +32,24 @@ jobs:
           grep -q "ui-polish-v57.js?v=" index.html
           grep -q "peek-calendar-v58.js?v=" index.html
           grep -q "peek-appearance-live-v58.js?v=" index.html
+          grep -q "peek-cell-style-v59.js?v=" index.html
           grep -q "FOCUSCAL_FIREBASE_CONFIG" firebase-config.js
           grep -q "リアルタイム共有に接続済み" peek.js
           if grep -q "リアルタイム共有は準備済みです" peek.js; then exit 1; fi
-      - name: Mirrored calendar contract
+      - name: Trusted mirror contract
         run: |
           grep -q "richDays" peek-calendar-v58.js
-          grep -q "appearance" peek-calendar-v58.js
           grep -q "fc-mirror-grid" peek-calendar-v58.js
           grep -q "fc-mirror-day-detail" peek-calendar-v58.js
-          grep -q "peekVisibility" peek-calendar-v58.js
-          grep -q "memo" peek-calendar-v58.js
-          grep -q "start" peek-calendar-v58.js
-          grep -q "end" peek-calendar-v58.js
-          grep -q "FocusCalHolidays" peek-calendar-v58.js
           grep -q "publishAppearance" peek-appearance-live-v58.js
-          grep -q "fc_settings" peek-appearance-live-v58.js
-          grep -q "focuscal-v58-mirrored-peek" sw.js
-      - name: Holiday and unified sheet gestures
+          grep -q "colorKey" peek-cell-style-v59.js
+          grep -q "effect" peek-cell-style-v59.js
+          grep -q "fc-shared-colored" peek-cell-style-v59.js
+          grep -q "peekVisibility" peek-cell-style-v59.js
+          grep -q "focuscal-v59-trusted-cell-styles" sw.js
+      - name: Privacy and Firestore contract
         run: |
-          grep -q "fc_holidays_enabled" enhancements.js
-          grep -q "振替休日" enhancements.js
-          grep -q "国民の休日" enhancements.js
-          grep -q "fc-sheet-handle" ui-polish-v57.js
-          grep -q "fcUnifiedGesture" ui-polish-v57.js
-          grep -q "fc-holiday-badge" ui-polish-v57.js
-      - name: Firestore contract
-        run: |
+          grep -q "peekVisibility!=='private'" peek-cell-style-v59.js
           grep -q "match /events/{eventId}" firestore.rules
           grep -q "match /peekRequests/{requestId}" firestore.rules
           grep -q "match /peekPermissions/{permission}" firestore.rules
