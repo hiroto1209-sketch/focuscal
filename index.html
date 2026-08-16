@@ -21,8 +21,9 @@
       .replace(/<script[^>]*src=["']\.\/peek(?:-v\d+)?\.js[^"']*["'][^>]*><\/script>/gi,'')
       .replace(/<script[^>]*src=["']\.\/enhancements\.js[^"']*["'][^>]*><\/script>/gi,'')
       .replace(/<script[^>]*src=["']\.\/ui-polish-v57\.js[^"']*["'][^>]*><\/script>/gi,'')
-      .replace(/<script[^>]*src=["']\.\/peek-calendar-v58\.js[^"']*["'][^>]*><\/script>/gi,'');
-    const boot=`<script>window.FOCUSCAL_BOOT_BUILD='${BUILD}';<\/script><script src="./firebase-config.js?v=${BUILD}"><\/script><script src="./peek.js?v=${BUILD}"><\/script><script defer src="./enhancements.js?v=${BUILD}"><\/script><script defer src="./ui-polish-v57.js?v=${BUILD}"><\/script><script defer src="./peek-calendar-v58.js?v=${BUILD}"><\/script>`;
+      .replace(/<script[^>]*src=["']\.\/peek-calendar-v58\.js[^"']*["'][^>]*><\/script>/gi,'')
+      .replace(/<script[^>]*src=["']\.\/peek-appearance-live-v58\.js[^"']*["'][^>]*><\/script>/gi,'');
+    const boot=`<script>window.FOCUSCAL_BOOT_BUILD='${BUILD}';<\/script><script src="./firebase-config.js?v=${BUILD}"><\/script><script src="./peek.js?v=${BUILD}"><\/script><script defer src="./enhancements.js?v=${BUILD}"><\/script><script defer src="./ui-polish-v57.js?v=${BUILD}"><\/script><script defer src="./peek-calendar-v58.js?v=${BUILD}"><\/script><script defer src="./peek-appearance-live-v58.js?v=${BUILD}"><\/script>`;
     html=html.replace('</head>',boot+'</head>');
     document.open();document.write(html);document.close();
   }catch(err){
