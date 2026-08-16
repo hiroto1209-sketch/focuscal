@@ -19,6 +19,7 @@ jobs:
           node --check enhancements.js
           node --check ui-polish-v57.js
           node --check peek-calendar-v58.js
+          node --check peek-appearance-live-v58.js
           node --check sw.js
       - name: Realtime boot wiring
         run: |
@@ -29,6 +30,7 @@ jobs:
           grep -q "enhancements.js?v=" index.html
           grep -q "ui-polish-v57.js?v=" index.html
           grep -q "peek-calendar-v58.js?v=" index.html
+          grep -q "peek-appearance-live-v58.js?v=" index.html
           grep -q "FOCUSCAL_FIREBASE_CONFIG" firebase-config.js
           grep -q "リアルタイム共有に接続済み" peek.js
           if grep -q "リアルタイム共有は準備済みです" peek.js; then exit 1; fi
@@ -43,6 +45,8 @@ jobs:
           grep -q "start" peek-calendar-v58.js
           grep -q "end" peek-calendar-v58.js
           grep -q "FocusCalHolidays" peek-calendar-v58.js
+          grep -q "publishAppearance" peek-appearance-live-v58.js
+          grep -q "fc_settings" peek-appearance-live-v58.js
           grep -q "focuscal-v58-mirrored-peek" sw.js
       - name: Holiday and unified sheet gestures
         run: |
