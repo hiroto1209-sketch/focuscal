@@ -1,0 +1,33 @@
+name: Verify realtime boot
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: |
+          node --check peek.js
+          node --check sw.js
+      - name: Realtime boot wiring
+        run: |
+          test -f app.html
+          grep -q "app.html?v=" index.html
+          grep -q "firebase-config.js?v=" index.html
+          grep -q "peek.js?v=" index.html
+          grep -q "FOCUSCAL_FIREBASE_CONFIG" firebase-config.js
+          grep -q "リアルタイム共有に接続済み" peek.js
+          if grep -q "リアルタイム共有は準備済みです" peek.js; then exit 1; fi
+      - name: Firestore contract
+        run: |
+          grep -q "match /events/{eventId}" firestore.rules
+          grep -q "match /peekRequests/{requestId}" firestore.rules
+          grep -q "match /peekPermissions/{permission}" firestore.rules
