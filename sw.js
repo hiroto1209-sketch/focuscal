@@ -1,5 +1,5 @@
-const CACHE='focuscal-v56-holidays-gestures';
-const CORE=['./index.html','./app.html','./manifest.json','./icon-192.png','./icon-512.png','./enhancements.js'];
+const CACHE='focuscal-v57-unified-sheets';
+const CORE=['./index.html','./app.html','./manifest.json','./icon-192.png','./icon-512.png','./enhancements.js','./ui-polish-v57.js'];
 
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{
@@ -35,7 +35,7 @@ self.addEventListener('fetch',event=>{
     return;
   }
 
-  if(path.endsWith('/app.html')||path.endsWith('/peek.js')||path.endsWith('/firebase-config.js')||path.endsWith('/enhancements.js')||path.endsWith('/sw.js')){
+  if(path.endsWith('/app.html')||path.endsWith('/peek.js')||path.endsWith('/firebase-config.js')||path.endsWith('/enhancements.js')||path.endsWith('/ui-polish-v57.js')||path.endsWith('/sw.js')){
     event.respondWith(networkFirst(event.request));
     return;
   }
