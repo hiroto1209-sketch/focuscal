@@ -1,0 +1,136 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function permissionId(ownerUid, viewerUid) {
+      return ownerUid + '_' + viewerUid;
+    }
+
+    function canViewCalendar(ownerUid) {
+      return signedIn() && (
+        request.auth.uid == ownerUid ||
+        (
+          exists(/databases/$(database)/documents/peekPermissions/$(permissionId(ownerUid, request.auth.uid))) &&
+          get(/databases/$(database)/documents/peekPermissions/$(permissionId(ownerUid, request.auth.uid))).data.active == true
+        )
+      );
+    }
+
+    // Private user profile. Each user controls only their own document.
+    match /users/{uid} {
+      allow read, create, update, delete: if isSelf(uid);
+    }
+
+    // Public lookup from FocusCal share code -> Firebase UID.
+    // Only authenticated users may resolve a code, and only the owner may claim/update it.
+    match /shareCodes/{code} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.keys().hasOnly(['uid', 'createdAt']);
+      allow update: if signedIn()
+                    && resource.data.uid == request.auth.uid
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['createdAt']);
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // Calendar events and progress entries.
+    // Owners can edit. Approved viewers can only read.
+    match /events/{eventId} {
+      allow create: if signedIn()
+                    && request.resource.data.ownerUid == request.auth.uid;
+      allow read: if signedIn()
+                  && resource.data.ownerUid is string
+                  && canViewCalendar(resource.data.ownerUid);
+      allow update: if signedIn()
+                    && resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.ownerUid == request.auth.uid;
+      allow delete: if signedIn()
+                    && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Peek requests: requester asks an owner for permission.
+    match /peekRequests/{requestId} {
+      allow create: if signedIn()
+                    && request.resource.data.requesterUid == request.auth.uid
+                    && request.resource.data.ownerUid is string
+                    && request.resource.data.ownerUid != request.auth.uid
+                    && request.resource.data.status == 'pending';
+
+      allow read: if signedIn() && (
+        resource.data.requesterUid == request.auth.uid ||
+        resource.data.ownerUid == request.auth.uid
+      );
+
+      // Calendar owner may approve/reject. Requester may cancel.
+      allow update: if signedIn()
+                    && request.resource.data.requesterUid == resource.data.requesterUid
+                    && request.resource.data.ownerUid == resource.data.ownerUid
+                    && (
+                      (
+                        request.auth.uid == resource.data.ownerUid
+                        && resource.data.status == 'pending'
+                        && request.resource.data.status in ['approved', 'rejected']
+                      ) ||
+                      (
+                        request.auth.uid == resource.data.requesterUid
+                        && resource.data.status == 'pending'
+                        && request.resource.data.status == 'cancelled'
+                      )
+                    );
+
+      allow delete: if signedIn() && (
+        resource.data.requesterUid == request.auth.uid ||
+        resource.data.ownerUid == request.auth.uid
+      );
+    }
+
+    // Approved realtime viewing permissions.
+    // Document ID must be: <ownerUid>_<viewerUid>
+    match /peekPermissions/{permission} {
+      allow read: if signedIn() && (
+        resource.data.ownerUid == request.auth.uid ||
+        resource.data.viewerUid == request.auth.uid
+      );
+
+      allow create: if signedIn()
+                    && request.resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.viewerUid is string
+                    && request.resource.data.viewerUid != request.auth.uid
+                    && request.resource.data.active == true
+                    && permission == permissionId(request.resource.data.ownerUid, request.resource.data.viewerUid);
+
+      // Owner can enable/disable. Viewer can only revoke their own access.
+      allow update: if signedIn()
+                    && request.resource.data.ownerUid == resource.data.ownerUid
+                    && request.resource.data.viewerUid == resource.data.viewerUid
+                    && permission == permissionId(resource.data.ownerUid, resource.data.viewerUid)
+                    && (
+                      request.auth.uid == resource.data.ownerUid ||
+                      (
+                        request.auth.uid == resource.data.viewerUid
+                        && request.resource.data.active == false
+                      )
+                    );
+
+      allow delete: if signedIn() && (
+        resource.data.ownerUid == request.auth.uid ||
+        resource.data.viewerUid == request.auth.uid
+      );
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
