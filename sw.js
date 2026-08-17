@@ -2,7 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
 firebase.initializeApp({apiKey:'AIzaSyAG3z8Uq40nGP1ofCcsFoMLcGZ4a4tsGhA',authDomain:'focuscal-connects.firebaseapp.com',projectId:'focuscal-connects',storageBucket:'focuscal-connects.firebasestorage.app',messagingSenderId:'570470010602',appId:'1:570470010602:web:4142ec4b57990c81581193'});
 try{firebase.messaging().onBackgroundMessage(payload=>{const n=payload.notification||{};self.registration.showNotification(n.title||'FocusCal',{body:n.body||'新しい更新があります',icon:'./icon-192.png',badge:'./icon-192.png',data:payload.data||{}})})}catch(e){console.warn('[FocusCal SW messaging]',e)}
-const CACHE='focuscal-v74-structural-header-repair';
+const CACHE='focuscal-v75-safe-feature-menu';
 const CORE=['./index.html','./app.html','./manifest.json','./icon-192.png','./icon-512.png','./enhancements.js','./ui-polish-v57.js','./peek-calendar-v58.js','./peek-appearance-live-v58.js','./peek-cell-style-v59.js','./feedback-v60.js','./push-config.js','./src/v70/auto-planner.js','./src/v70/account.js','./src/v70/collaboration.js','./src/v70/notifications.js','./src/v70/observability.js','./src/v71/action-menu.js','./src/v72/header-cleanup.js'];
 self.addEventListener('install',event=>{event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll(CORE);await self.skipWaiting()})())});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim()})())});
