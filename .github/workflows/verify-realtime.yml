@@ -41,22 +41,24 @@ jobs:
           node --check scripts/verify-focuscal.mjs
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
-      - name: Feature menu runtime contract
+      - name: Animated feature menu contract
         run: |
-          grep -q "const BUILD='77'" index.html
+          grep -q "const BUILD='78'" index.html
           grep -q "src/v76/feature-menu.js?v=" index.html
           ! grep -q '<script defer src="./src/v71/action-menu.js?v=' index.html
           ! grep -q '<script defer src="./src/v72/header-cleanup.js?v=' index.html
-          grep -q "const BUILD='77'" src/v76/feature-menu.js
-          grep -q "STYLE_TEXT" src/v76/feature-menu.js
-          ! grep -q "CSS.escape" src/v76/feature-menu.js
-          grep -q "hasKey" src/v76/feature-menu.js
+          grep -q "const BUILD='78'" src/v76/feature-menu.js
+          grep -q "EXCLUDE_RE" src/v76/feature-menu.js
+          grep -q "英語フレーズを追加" src/v76/feature-menu.js
+          grep -q "中国語フレーズを追加" src/v76/feature-menu.js
+          grep -q "fc-v78-open" src/v76/feature-menu.js
+          grep -q "transition-delay:calc(var(--i,0) \* 32ms)" src/v76/feature-menu.js
           grep -q "stopImmediatePropagation" src/v76/feature-menu.js
           grep -q "fab-fit" src/v76/feature-menu.js
           grep -q "fab-book" src/v76/feature-menu.js
           grep -q "fab-party" src/v76/feature-menu.js
           grep -q "origin.click()" src/v76/feature-menu.js
-          grep -q "focuscal-v77-feature-menu-runtime-fix" sw.js
+          grep -q "focuscal-v78-animated-feature-menu" sw.js
       - name: Core v70 contracts
         run: |
           grep -q "findSlot" src/v70/auto-planner.js
