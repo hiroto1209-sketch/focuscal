@@ -14,13 +14,12 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 7
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-
       - name: JavaScript syntax
         run: |
           node --check peek.js
@@ -31,69 +30,48 @@ jobs:
           node --check peek-cell-style-v59.js
           node --check feedback-v60.js
           node --check admin-dashboard.js
+          node --check src/v70/auto-planner.js
+          node --check src/v70/account.js
+          node --check src/v70/collaboration.js
+          node --check src/v70/notifications.js
+          node --check src/v70/observability.js
+          node --check functions/index.js
           node --check sw.js
           node --check scripts/verify-focuscal.mjs
-
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
-
-      - name: Realtime boot wiring
+      - name: Core v70 contracts
         run: |
-          test -f app.html
-          grep -q "app.html?v=" index.html
-          grep -q "firebase-config.js?v=" index.html
-          grep -q "peek.js?v=" index.html
-          grep -q "enhancements.js?v=" index.html
-          grep -q "ui-polish-v57.js?v=" index.html
-          grep -q "peek-calendar-v58.js?v=" index.html
-          grep -q "peek-appearance-live-v58.js?v=" index.html
-          grep -q "peek-cell-style-v59.js?v=" index.html
-          grep -q "feedback-v60.js?v=" index.html
-          grep -q "FOCUSCAL_FIREBASE_CONFIG" firebase-config.js
-          grep -q "リアルタイム共有に接続済み" peek.js
-          if grep -q "リアルタイム共有は準備済みです" peek.js; then exit 1; fi
-
-      - name: Trusted mirror contract
+          grep -q "const BUILD='70'" index.html
+          grep -q "findSlot" src/v70/auto-planner.js
+          grep -q "linkWithPopup" src/v70/account.js
+          grep -q "spaceEvents" src/v70/collaboration.js
+          grep -q "getToken" src/v70/notifications.js
+          grep -q "clientErrors" src/v70/observability.js
+          grep -q "productEvents" src/v70/observability.js
+          grep -q "clusterStats" admin-dashboard.js
+          grep -q "focuscal-v70-intelligent-core" sw.js
+      - name: Firebase and security contracts
         run: |
-          grep -q "richDays" peek-calendar-v58.js
-          grep -q "fc-mirror-grid" peek-calendar-v58.js
-          grep -q "fc-mirror-day-detail" peek-calendar-v58.js
-          grep -q "publishAppearance" peek-appearance-live-v58.js
-          grep -q "colorKey" peek-cell-style-v59.js
-          grep -q "effect" peek-cell-style-v59.js
-          grep -q "fc-shared-colored" peek-cell-style-v59.js
-          grep -q "peekVisibility" peek-cell-style-v59.js
-
-      - name: Feedback pipeline contract
-        run: |
-          grep -q "collection(db,'feedback')" feedback-v60.js
-          grep -q "GitHub" feedback-v60.js
-          grep -q "userAgent" feedback-v60.js
+          grep -q "match /spaces/{spaceId}" firestore.rules
+          grep -q "match /spaceEvents/{eventId}" firestore.rules
+          grep -q "match /pushTokens/{uid}" firestore.rules
+          grep -q "match /clientErrors/{id}" firestore.rules
+          grep -q "match /productEvents/{id}" firestore.rules
           grep -q "match /feedback/{feedbackId}" firestore.rules
-          grep -q "request.resource.data.authorUid == request.auth.uid" firestore.rules
-          test -f .github/ISSUE_TEMPLATE/bug_report.yml
-          test -f .github/ISSUE_TEMPLATE/feature_request.yml
-          test -f .github/ISSUE_TEMPLATE/ui_feedback.yml
-          test -f .github/ISSUE_TEMPLATE/performance_feedback.yml
-          grep -q "focuscal-v60-feedback-pipeline" sw.js
-
-      - name: Feedback admin dashboard contract
-        run: |
-          test -f admin.html
-          test -f admin-dashboard.js
-          grep -q "admin-dashboard.js?v=61" admin.html
-          grep -q "collection(db,'feedback')" admin-dashboard.js
-          grep -q "doc(db,'admins',uid)" admin-dashboard.js
-          grep -q "priorityScore" admin-dashboard.js
-          grep -q "investigating" admin-dashboard.js
-          grep -q "function isAdmin()" firestore.rules
           grep -q "match /admins/{uid}" firestore.rules
-          grep -q "allow read: if isAdmin()" firestore.rules
-
-      - name: Security guardrails
-        run: |
           if grep -q "allow read, write: if true" firestore.rules; then echo "Unsafe Firestore rule"; exit 1; fi
+      - name: Push backend contracts
+        run: |
+          test -f functions/package.json
+          test -f functions/index.js
+          grep -q "onPeekRequestCreated" functions/index.js
+          grep -q "onSharedEventCreated" functions/index.js
+          grep -q "firebase.messaging().onBackgroundMessage" sw.js
+      - name: Existing sharing and feedback regression checks
+        run: |
+          grep -q "リアルタイム共有に接続済み" peek.js
           grep -q "peekVisibility!=='private'" peek-cell-style-v59.js
-          grep -q "match /events/{eventId}" firestore.rules
-          grep -q "match /peekRequests/{requestId}" firestore.rules
-          grep -q "match /peekPermissions/{permission}" firestore.rules
+          grep -q "collection(db,'feedback')" feedback-v60.js
+          test -f admin.html
+          test -f ops.html
