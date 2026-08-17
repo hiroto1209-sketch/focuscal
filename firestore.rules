@@ -24,13 +24,10 @@ service cloud.firestore {
       );
     }
 
-    // Private user profile. Each user controls only their own document.
     match /users/{uid} {
       allow read, create, update, delete: if isSelf(uid);
     }
 
-    // Public lookup from FocusCal share code -> Firebase UID.
-    // Only authenticated users may resolve a code, and only the owner may claim/update it.
     match /shareCodes/{code} {
       allow read: if signedIn();
       allow create: if signedIn()
@@ -43,8 +40,6 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
 
-    // Calendar events and progress entries.
-    // Owners can edit. Approved viewers can only read.
     match /events/{eventId} {
       allow create: if signedIn()
                     && request.resource.data.ownerUid == request.auth.uid;
@@ -58,7 +53,6 @@ service cloud.firestore {
                     && resource.data.ownerUid == request.auth.uid;
     }
 
-    // Peek requests: requester asks an owner for permission.
     match /peekRequests/{requestId} {
       allow create: if signedIn()
                     && request.resource.data.requesterUid == request.auth.uid
@@ -71,7 +65,6 @@ service cloud.firestore {
         resource.data.ownerUid == request.auth.uid
       );
 
-      // Calendar owner may approve/reject. Requester may cancel.
       allow update: if signedIn()
                     && request.resource.data.requesterUid == resource.data.requesterUid
                     && request.resource.data.ownerUid == resource.data.ownerUid
@@ -94,8 +87,6 @@ service cloud.firestore {
       );
     }
 
-    // Approved realtime viewing permissions.
-    // Document ID must be: <ownerUid>_<viewerUid>
     match /peekPermissions/{permission} {
       allow read: if signedIn() && (
         resource.data.ownerUid == request.auth.uid ||
@@ -109,7 +100,6 @@ service cloud.firestore {
                     && request.resource.data.active == true
                     && permission == permissionId(request.resource.data.ownerUid, request.resource.data.viewerUid);
 
-      // Owner can enable/disable. Viewer can only revoke their own access.
       allow update: if signedIn()
                     && request.resource.data.ownerUid == resource.data.ownerUid
                     && request.resource.data.viewerUid == resource.data.viewerUid
@@ -128,7 +118,28 @@ service cloud.firestore {
       );
     }
 
-    // Deny everything else by default.
+    // In-app product feedback. Any authenticated (including anonymous) FocusCal user
+    // may create a bounded feedback document. Clients can never read, edit or delete
+    // feedback documents; project admins can review them in Firebase Console.
+    match /feedback/{feedbackId} {
+      allow create: if signedIn()
+                    && request.resource.data.authorUid == request.auth.uid
+                    && request.resource.data.category in ['bug', 'idea', 'ui', 'speed']
+                    && request.resource.data.severity in ['normal', 'high', 'critical']
+                    && request.resource.data.message is string
+                    && request.resource.data.message.size() >= 3
+                    && request.resource.data.message.size() <= 4000
+                    && request.resource.data.title is string
+                    && request.resource.data.title.size() <= 100
+                    && request.resource.data.steps is string
+                    && request.resource.data.steps.size() <= 2000
+                    && request.resource.data.keys().hasOnly([
+                      'authorUid', 'category', 'title', 'message', 'steps', 'severity',
+                      'build', 'viewport', 'platform', 'userAgent', 'path', 'online', 'createdAt'
+                    ]);
+      allow read, update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
