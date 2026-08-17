@@ -4,22 +4,27 @@ const mustExist=[
   'peek-calendar-v58.js','peek-appearance-live-v58.js','peek-cell-style-v59.js','feedback-v60.js',
   'admin.html','admin-dashboard.js','ops.html','src/v70/ops-dashboard.js',
   'src/v70/auto-planner.js','src/v70/account.js','src/v70/collaboration.js','src/v70/notifications.js','src/v70/observability.js',
-  'functions/package.json','functions/index.js','firestore.rules','sw.js',
+  'src/v71/action-menu.js','functions/package.json','functions/index.js','firestore.rules','sw.js',
   '.github/ISSUE_TEMPLATE/bug_report.yml','.github/ISSUE_TEMPLATE/feature_request.yml',
   '.github/ISSUE_TEMPLATE/ui_feedback.yml','.github/ISSUE_TEMPLATE/performance_feedback.yml'
 ];
 for(const file of mustExist){if(!fs.existsSync(file))throw new Error(`Missing required file: ${file}`)}
 const read=f=>fs.readFileSync(f,'utf8');
-const index=read('index.html'),admin=read('admin.html'),adminJs=read('admin-dashboard.js'),sw=read('sw.js'),rules=read('firestore.rules'),feedback=read('feedback-v60.js');
+const index=read('index.html'),admin=read('admin.html'),adminJs=read('admin-dashboard.js'),sw=read('sw.js'),rules=read('firestore.rules'),feedback=read('feedback-v60.js'),menu=read('src/v71/action-menu.js');
 const checks=[
-  [index.includes("const BUILD='70'"),'index BUILD must be 70'],
+  [index.includes("const BUILD='71'"),'index BUILD must be 71'],
+  [index.includes('src/v71/action-menu.js?v='),'v71 action menu must be boot-wired'],
+  [menu.includes("btn.id==='settings-btn'"),'settings must stay in header'],
+  [menu.includes("classList.add('fab-item','fc-v71-action')"),'secondary nav actions must become FAB items'],
+  [menu.includes("document.querySelectorAll('.nav-btn')"),'dynamic nav migration missing'],
   [index.includes('src/v70/auto-planner.js?v='),'auto planner must be boot-wired'],
   [index.includes('src/v70/account.js?v='),'account must be boot-wired'],
   [index.includes('src/v70/collaboration.js?v='),'collaboration must be boot-wired'],
   [index.includes('src/v70/notifications.js?v='),'notifications must be boot-wired'],
   [index.includes('src/v70/observability.js?v='),'observability must be boot-wired'],
   [index.includes('push-config.js?v='),'push config must be boot-wired'],
-  [sw.includes('focuscal-v70-intelligent-core'),'v70 service-worker cache missing'],
+  [sw.includes('focuscal-v71-clean-action-menu'),'v71 service-worker cache missing'],
+  [sw.includes('src/v71/action-menu.js'),'v71 action menu missing from service-worker core'],
   [sw.includes('firebase.messaging().onBackgroundMessage'),'FCM background handler missing'],
   [rules.includes('match /feedback/{feedbackId}'),'Firestore feedback rule missing'],
   [rules.includes('match /admins/{uid}'),'Firestore admin rule missing'],
@@ -43,4 +48,4 @@ const checks=[
 for(const [ok,msg] of checks){if(!ok)throw new Error(msg)}
 const scriptRefs=[...index.matchAll(/src=\\?['\"]\.\/(.+?)\?v=/g)].map(m=>m[1]);
 for(const ref of scriptRefs){if(!fs.existsSync(ref))throw new Error(`Boot references missing asset: ${ref}`)}
-console.log(`FocusCal v70 integrity OK: ${mustExist.length} required files, ${scriptRefs.length} boot scripts, scheduler/account/collaboration/notifications/observability verified.`);
+console.log(`FocusCal v71 integrity OK: ${mustExist.length} required files, ${scriptRefs.length} boot scripts, clean action menu + v70 core verified.`);
