@@ -10,6 +10,11 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
     function permissionId(ownerUid, viewerUid) {
       return ownerUid + '_' + viewerUid;
     }
@@ -118,9 +123,15 @@ service cloud.firestore {
       );
     }
 
-    // In-app product feedback. Any authenticated (including anonymous) FocusCal user
-    // may create a bounded feedback document. Clients can never read, edit or delete
-    // feedback documents; project admins can review them in Firebase Console.
+    // Admin identities are provisioned only from Firebase Console.
+    // A client may check only whether its own admin document exists.
+    match /admins/{uid} {
+      allow read: if isSelf(uid);
+      allow create, update, delete: if false;
+    }
+
+    // In-app product feedback. Authenticated users can submit bounded feedback.
+    // Only provisioned admins can read it. Admin updates are limited to triage fields.
     match /feedback/{feedbackId} {
       allow create: if signedIn()
                     && request.resource.data.authorUid == request.auth.uid
@@ -137,7 +148,21 @@ service cloud.firestore {
                       'authorUid', 'category', 'title', 'message', 'steps', 'severity',
                       'build', 'viewport', 'platform', 'userAgent', 'path', 'online', 'createdAt'
                     ]);
-      allow read, update, delete: if false;
+
+      allow read: if isAdmin();
+
+      allow update: if isAdmin()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                      'status', 'priorityScore', 'adminNote', 'updatedAt'
+                    ])
+                    && request.resource.data.status in ['new', 'investigating', 'planned', 'resolved', 'wontfix']
+                    && request.resource.data.priorityScore is number
+                    && request.resource.data.priorityScore >= 0
+                    && request.resource.data.priorityScore <= 999
+                    && request.resource.data.adminNote is string
+                    && request.resource.data.adminNote.size() <= 2000;
+
+      allow delete: if false;
     }
 
     match /{document=**} {
