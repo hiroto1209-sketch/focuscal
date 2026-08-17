@@ -1,0 +1,26 @@
+name: 🎨 UI・使い勝手の改善
+description: 見た目、操作感、分かりにくさのフィードバック用です。
+title: "[UI] "
+body:
+  - type: textarea
+    id: screen
+    attributes:
+      label: どの画面ですか？
+      placeholder: 例）設定 / カレンダーを覗かせて頂く / 予定詳細
+    validations:
+      required: true
+  - type: textarea
+    id: awkward
+    attributes:
+      label: 何が気になりましたか？
+    validations:
+      required: true
+  - type: textarea
+    id: desired
+    attributes:
+      label: どうなると気持ちよく使えそうですか？
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: スクリーンショット
+      description: 必要ならここへドラッグ＆ドロップしてください。
