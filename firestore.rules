@@ -1,172 +1,93 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn(){ return request.auth != null; }
+    function isSelf(uid){ return signedIn() && request.auth.uid == uid; }
+    function isAdmin(){ return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function permissionId(ownerUid,viewerUid){ return ownerUid + '_' + viewerUid; }
+    function canViewCalendar(ownerUid){ return signedIn() && (request.auth.uid == ownerUid || (exists(/databases/$(database)/documents/peekPermissions/$(permissionId(ownerUid,request.auth.uid))) && get(/databases/$(database)/documents/peekPermissions/$(permissionId(ownerUid,request.auth.uid))).data.active == true)); }
 
-    function signedIn() {
-      return request.auth != null;
+    match /users/{uid}{ allow read, create, update, delete: if isSelf(uid); }
+    match /calendarBackups/{backupId}{
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow read, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow update: if signedIn() && resource.data.ownerUid == request.auth.uid && request.resource.data.ownerUid == request.auth.uid;
     }
-
-    function isSelf(uid) {
-      return signedIn() && request.auth.uid == uid;
+    match /pushTokens/{uid}{
+      allow read: if isSelf(uid);
+      allow create, update: if isSelf(uid) && request.resource.data.uid == request.auth.uid;
+      allow delete: if isSelf(uid);
     }
-
-    function isAdmin() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-
-    function permissionId(ownerUid, viewerUid) {
-      return ownerUid + '_' + viewerUid;
-    }
-
-    function canViewCalendar(ownerUid) {
-      return signedIn() && (
-        request.auth.uid == ownerUid ||
-        (
-          exists(/databases/$(database)/documents/peekPermissions/$(permissionId(ownerUid, request.auth.uid))) &&
-          get(/databases/$(database)/documents/peekPermissions/$(permissionId(ownerUid, request.auth.uid))).data.active == true
-        )
-      );
-    }
-
-    match /users/{uid} {
-      allow read, create, update, delete: if isSelf(uid);
-    }
-
-    match /shareCodes/{code} {
+    match /shareCodes/{code}{
       allow read: if signedIn();
-      allow create: if signedIn()
-                    && request.resource.data.uid == request.auth.uid
-                    && request.resource.data.keys().hasOnly(['uid', 'createdAt']);
-      allow update: if signedIn()
-                    && resource.data.uid == request.auth.uid
-                    && request.resource.data.uid == request.auth.uid
-                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['createdAt']);
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.keys().hasOnly(['uid','createdAt']);
+      allow update: if signedIn() && resource.data.uid == request.auth.uid && request.resource.data.uid == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['createdAt']);
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
-
-    match /events/{eventId} {
-      allow create: if signedIn()
-                    && request.resource.data.ownerUid == request.auth.uid;
-      allow read: if signedIn()
-                  && resource.data.ownerUid is string
-                  && canViewCalendar(resource.data.ownerUid);
-      allow update: if signedIn()
-                    && resource.data.ownerUid == request.auth.uid
-                    && request.resource.data.ownerUid == request.auth.uid;
-      allow delete: if signedIn()
-                    && resource.data.ownerUid == request.auth.uid;
+    match /events/{eventId}{
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid;
+      allow read: if signedIn() && resource.data.ownerUid is string && canViewCalendar(resource.data.ownerUid);
+      allow update: if signedIn() && resource.data.ownerUid == request.auth.uid && request.resource.data.ownerUid == request.auth.uid;
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+    match /peekRequests/{requestId}{
+      allow create: if signedIn() && request.resource.data.requesterUid == request.auth.uid && request.resource.data.ownerUid is string && request.resource.data.ownerUid != request.auth.uid && request.resource.data.status == 'pending';
+      allow read: if signedIn() && (resource.data.requesterUid == request.auth.uid || resource.data.ownerUid == request.auth.uid);
+      allow update: if signedIn() && request.resource.data.requesterUid == resource.data.requesterUid && request.resource.data.ownerUid == resource.data.ownerUid && ((request.auth.uid == resource.data.ownerUid && resource.data.status == 'pending' && request.resource.data.status in ['approved','rejected']) || (request.auth.uid == resource.data.requesterUid && resource.data.status == 'pending' && request.resource.data.status == 'cancelled'));
+      allow delete: if signedIn() && (resource.data.requesterUid == request.auth.uid || resource.data.ownerUid == request.auth.uid);
+    }
+    match /peekPermissions/{permission}{
+      allow read: if signedIn() && (resource.data.ownerUid == request.auth.uid || resource.data.viewerUid == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid && request.resource.data.viewerUid is string && request.resource.data.viewerUid != request.auth.uid && request.resource.data.active == true && permission == permissionId(request.resource.data.ownerUid,request.resource.data.viewerUid);
+      allow update: if signedIn() && request.resource.data.ownerUid == resource.data.ownerUid && request.resource.data.viewerUid == resource.data.viewerUid && permission == permissionId(resource.data.ownerUid,resource.data.viewerUid) && (request.auth.uid == resource.data.ownerUid || (request.auth.uid == resource.data.viewerUid && request.resource.data.active == false));
+      allow delete: if signedIn() && (resource.data.ownerUid == request.auth.uid || resource.data.viewerUid == request.auth.uid);
     }
 
-    match /peekRequests/{requestId} {
+    match /spaces/{spaceId}{
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid && request.resource.data.memberUids == [request.auth.uid];
+      allow read: if signedIn() && request.auth.uid in resource.data.memberUids;
+      allow update: if signedIn() && (
+        request.auth.uid == resource.data.ownerUid ||
+        (!(request.auth.uid in resource.data.memberUids)
+          && request.auth.uid in request.resource.data.memberUids
+          && request.resource.data.memberUids.hasAll(resource.data.memberUids)
+          && request.resource.data.memberUids.size() == resource.data.memberUids.size() + 1
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids']))
+      );
+      allow delete: if signedIn() && request.auth.uid == resource.data.ownerUid;
+    }
+    match /spaceCodes/{inviteCode}{
+      allow read: if signedIn();
       allow create: if signedIn()
-                    && request.resource.data.requesterUid == request.auth.uid
-                    && request.resource.data.ownerUid is string
-                    && request.resource.data.ownerUid != request.auth.uid
-                    && request.resource.data.status == 'pending';
-
-      allow read: if signedIn() && (
-        resource.data.requesterUid == request.auth.uid ||
-        resource.data.ownerUid == request.auth.uid
-      );
-
-      allow update: if signedIn()
-                    && request.resource.data.requesterUid == resource.data.requesterUid
-                    && request.resource.data.ownerUid == resource.data.ownerUid
-                    && (
-                      (
-                        request.auth.uid == resource.data.ownerUid
-                        && resource.data.status == 'pending'
-                        && request.resource.data.status in ['approved', 'rejected']
-                      ) ||
-                      (
-                        request.auth.uid == resource.data.requesterUid
-                        && resource.data.status == 'pending'
-                        && request.resource.data.status == 'cancelled'
-                      )
-                    );
-
-      allow delete: if signedIn() && (
-        resource.data.requesterUid == request.auth.uid ||
-        resource.data.ownerUid == request.auth.uid
-      );
+                    && request.resource.data.spaceId is string
+                    && get(/databases/$(database)/documents/spaces/$(request.resource.data.spaceId)).data.ownerUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+    match /spaceEvents/{eventId}{
+      allow create: if signedIn() && request.resource.data.createdBy == request.auth.uid && request.auth.uid in get(/databases/$(database)/documents/spaces/$(request.resource.data.spaceId)).data.memberUids;
+      allow read: if signedIn() && request.auth.uid in get(/databases/$(database)/documents/spaces/$(resource.data.spaceId)).data.memberUids;
+      allow update, delete: if signedIn() && request.auth.uid in get(/databases/$(database)/documents/spaces/$(resource.data.spaceId)).data.memberUids;
     }
 
-    match /peekPermissions/{permission} {
-      allow read: if signedIn() && (
-        resource.data.ownerUid == request.auth.uid ||
-        resource.data.viewerUid == request.auth.uid
-      );
-
-      allow create: if signedIn()
-                    && request.resource.data.ownerUid == request.auth.uid
-                    && request.resource.data.viewerUid is string
-                    && request.resource.data.viewerUid != request.auth.uid
-                    && request.resource.data.active == true
-                    && permission == permissionId(request.resource.data.ownerUid, request.resource.data.viewerUid);
-
-      allow update: if signedIn()
-                    && request.resource.data.ownerUid == resource.data.ownerUid
-                    && request.resource.data.viewerUid == resource.data.viewerUid
-                    && permission == permissionId(resource.data.ownerUid, resource.data.viewerUid)
-                    && (
-                      request.auth.uid == resource.data.ownerUid ||
-                      (
-                        request.auth.uid == resource.data.viewerUid
-                        && request.resource.data.active == false
-                      )
-                    );
-
-      allow delete: if signedIn() && (
-        resource.data.ownerUid == request.auth.uid ||
-        resource.data.viewerUid == request.auth.uid
-      );
-    }
-
-    // Admin identities are provisioned only from Firebase Console.
-    // A client may check only whether its own admin document exists.
-    match /admins/{uid} {
-      allow read: if isSelf(uid);
-      allow create, update, delete: if false;
-    }
-
-    // In-app product feedback. Authenticated users can submit bounded feedback.
-    // Only provisioned admins can read it. Admin updates are limited to triage fields.
-    match /feedback/{feedbackId} {
-      allow create: if signedIn()
-                    && request.resource.data.authorUid == request.auth.uid
-                    && request.resource.data.category in ['bug', 'idea', 'ui', 'speed']
-                    && request.resource.data.severity in ['normal', 'high', 'critical']
-                    && request.resource.data.message is string
-                    && request.resource.data.message.size() >= 3
-                    && request.resource.data.message.size() <= 4000
-                    && request.resource.data.title is string
-                    && request.resource.data.title.size() <= 100
-                    && request.resource.data.steps is string
-                    && request.resource.data.steps.size() <= 2000
-                    && request.resource.data.keys().hasOnly([
-                      'authorUid', 'category', 'title', 'message', 'steps', 'severity',
-                      'build', 'viewport', 'platform', 'userAgent', 'path', 'online', 'createdAt'
-                    ]);
-
+    match /admins/{uid}{ allow read: if isSelf(uid); allow create, update, delete: if false; }
+    match /feedback/{feedbackId}{
+      allow create: if signedIn() && request.resource.data.authorUid == request.auth.uid && request.resource.data.category in ['bug','idea','ui','speed'] && request.resource.data.severity in ['normal','high','critical'] && request.resource.data.message is string && request.resource.data.message.size() >= 3 && request.resource.data.message.size() <= 4000 && request.resource.data.title is string && request.resource.data.title.size() <= 100 && request.resource.data.steps is string && request.resource.data.steps.size() <= 2000 && request.resource.data.keys().hasOnly(['authorUid','category','title','message','steps','severity','build','viewport','platform','userAgent','path','online','createdAt']);
       allow read: if isAdmin();
-
-      allow update: if isAdmin()
-                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-                      'status', 'priorityScore', 'adminNote', 'updatedAt'
-                    ])
-                    && request.resource.data.status in ['new', 'investigating', 'planned', 'resolved', 'wontfix']
-                    && request.resource.data.priorityScore is number
-                    && request.resource.data.priorityScore >= 0
-                    && request.resource.data.priorityScore <= 999
-                    && request.resource.data.adminNote is string
-                    && request.resource.data.adminNote.size() <= 2000;
-
+      allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','priorityScore','adminNote','updatedAt']) && request.resource.data.status in ['new','investigating','planned','resolved','wontfix'] && request.resource.data.priorityScore is number && request.resource.data.priorityScore >= 0 && request.resource.data.priorityScore <= 999 && request.resource.data.adminNote is string && request.resource.data.adminNote.size() <= 2000;
       allow delete: if false;
     }
 
-    match /{document=**} {
-      allow read, write: if false;
+    match /clientErrors/{id}{
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if isAdmin();
+      allow update, delete: if false;
     }
+    match /productEvents/{id}{
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /{document=**}{ allow read, write: if false; }
   }
 }

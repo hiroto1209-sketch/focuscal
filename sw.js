@@ -1,55 +1,11 @@
-const CACHE='focuscal-v60-feedback-pipeline';
-const CORE=['./index.html','./app.html','./manifest.json','./icon-192.png','./icon-512.png','./enhancements.js','./ui-polish-v57.js','./peek-calendar-v58.js','./peek-appearance-live-v58.js','./peek-cell-style-v59.js','./feedback-v60.js'];
-
-self.addEventListener('install',event=>{
-  event.waitUntil((async()=>{
-    const cache=await caches.open(CACHE);
-    await cache.addAll(CORE);
-    await self.skipWaiting();
-  })());
-});
-
-self.addEventListener('activate',event=>{
-  event.waitUntil((async()=>{
-    const keys=await caches.keys();
-    await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
-    await self.clients.claim();
-  })());
-});
-
-async function networkFirst(request,fallback){
-  try{
-    const fresh=await fetch(request,{cache:'no-store'});
-    if(fresh.ok)return fresh;
-  }catch(_){ }
-  return (await caches.match(fallback||request))||Response.error();
-}
-
-self.addEventListener('fetch',event=>{
-  if(event.request.method!=='GET')return;
-  const url=new URL(event.request.url);
-  const path=url.pathname;
-
-  if(event.request.mode==='navigate'){
-    event.respondWith(networkFirst(event.request,'./index.html'));
-    return;
-  }
-
-  if(path.endsWith('/app.html')||path.endsWith('/peek.js')||path.endsWith('/firebase-config.js')||path.endsWith('/enhancements.js')||path.endsWith('/ui-polish-v57.js')||path.endsWith('/peek-calendar-v58.js')||path.endsWith('/peek-appearance-live-v58.js')||path.endsWith('/peek-cell-style-v59.js')||path.endsWith('/feedback-v60.js')||path.endsWith('/sw.js')){
-    event.respondWith(networkFirst(event.request));
-    return;
-  }
-
-  event.respondWith((async()=>{
-    const cached=await caches.match(event.request);
-    if(cached)return cached;
-    try{
-      const fresh=await fetch(event.request);
-      if(fresh.ok&&url.origin===self.location.origin){
-        const cache=await caches.open(CACHE);
-        cache.put(event.request,fresh.clone());
-      }
-      return fresh;
-    }catch(_){return Response.error()}
-  })());
-});
+importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
+firebase.initializeApp({apiKey:'AIzaSyAG3z8Uq40nGP1ofCcsFoMLcGZ4a4tsGhA',authDomain:'focuscal-connects.firebaseapp.com',projectId:'focuscal-connects',storageBucket:'focuscal-connects.firebasestorage.app',messagingSenderId:'570470010602',appId:'1:570470010602:web:4142ec4b57990c81581193'});
+try{firebase.messaging().onBackgroundMessage(payload=>{const n=payload.notification||{};self.registration.showNotification(n.title||'FocusCal',{body:n.body||'新しい更新があります',icon:'./icon-192.png',badge:'./icon-192.png',data:payload.data||{}})})}catch(e){console.warn('[FocusCal SW messaging]',e)}
+const CACHE='focuscal-v70-intelligent-core';
+const CORE=['./index.html','./app.html','./manifest.json','./icon-192.png','./icon-512.png','./enhancements.js','./ui-polish-v57.js','./peek-calendar-v58.js','./peek-appearance-live-v58.js','./peek-cell-style-v59.js','./feedback-v60.js','./push-config.js','./src/v70/auto-planner.js','./src/v70/account.js','./src/v70/collaboration.js','./src/v70/notifications.js','./src/v70/observability.js'];
+self.addEventListener('install',event=>{event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll(CORE);await self.skipWaiting()})())});
+self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim()})())});
+async function networkFirst(request,fallback){try{const fresh=await fetch(request,{cache:'no-store'});if(fresh.ok)return fresh}catch(_){}return(await caches.match(fallback||request))||Response.error()}
+self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;const url=new URL(event.request.url),path=url.pathname;if(event.request.mode==='navigate'){event.respondWith(networkFirst(event.request,'./index.html'));return}if(path.endsWith('/app.html')||path.endsWith('/peek.js')||path.endsWith('/firebase-config.js')||path.endsWith('/push-config.js')||path.endsWith('/enhancements.js')||path.includes('/src/v70/')||path.endsWith('/ui-polish-v57.js')||path.endsWith('/peek-calendar-v58.js')||path.endsWith('/peek-appearance-live-v58.js')||path.endsWith('/peek-cell-style-v59.js')||path.endsWith('/feedback-v60.js')||path.endsWith('/sw.js')){event.respondWith(networkFirst(event.request));return}event.respondWith((async()=>{const cached=await caches.match(event.request);if(cached)return cached;try{const fresh=await fetch(event.request);if(fresh.ok&&url.origin===self.location.origin){const cache=await caches.open(CACHE);cache.put(event.request,fresh.clone())}return fresh}catch(_){return Response.error()}})())});
+self.addEventListener('notificationclick',event=>{event.notification.close();event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(ws=>{for(const w of ws){if('focus'in w)return w.focus()}return clients.openWindow('./')}))});
