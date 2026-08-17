@@ -30,6 +30,7 @@ jobs:
           node --check peek-appearance-live-v58.js
           node --check peek-cell-style-v59.js
           node --check feedback-v60.js
+          node --check admin-dashboard.js
           node --check sw.js
           node --check scripts/verify-focuscal.mjs
 
@@ -76,11 +77,23 @@ jobs:
           test -f .github/ISSUE_TEMPLATE/performance_feedback.yml
           grep -q "focuscal-v60-feedback-pipeline" sw.js
 
+      - name: Feedback admin dashboard contract
+        run: |
+          test -f admin.html
+          test -f admin-dashboard.js
+          grep -q "admin-dashboard.js?v=61" admin.html
+          grep -q "collection(db,'feedback')" admin-dashboard.js
+          grep -q "doc(db,'admins',uid)" admin-dashboard.js
+          grep -q "priorityScore" admin-dashboard.js
+          grep -q "investigating" admin-dashboard.js
+          grep -q "function isAdmin()" firestore.rules
+          grep -q "match /admins/{uid}" firestore.rules
+          grep -q "allow read: if isAdmin()" firestore.rules
+
       - name: Security guardrails
         run: |
           if grep -q "allow read, write: if true" firestore.rules; then echo "Unsafe Firestore rule"; exit 1; fi
           grep -q "peekVisibility!=='private'" peek-cell-style-v59.js
-          grep -q "allow read, update, delete: if false" firestore.rules
           grep -q "match /events/{eventId}" firestore.rules
           grep -q "match /peekRequests/{requestId}" firestore.rules
           grep -q "match /peekPermissions/{permission}" firestore.rules
