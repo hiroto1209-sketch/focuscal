@@ -35,23 +35,28 @@ jobs:
           node --check src/v70/collaboration.js
           node --check src/v70/notifications.js
           node --check src/v70/observability.js
-          node --check src/v71/action-menu.js
-          node --check src/v72/header-cleanup.js
+          node --check src/v76/feature-menu.js
           node --check functions/index.js
           node --check sw.js
           node --check scripts/verify-focuscal.mjs
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
-      - name: Safe feature menu recovery contract
+      - name: Single feature menu contract
         run: |
-          grep -q "const BUILD='75'" index.html
-          grep -q "legacyMoverDisabled:true" src/v71/action-menu.js
-          grep -q "const BUILD='75'" src/v72/header-cleanup.js
-          grep -q "fc-v75-menu" src/v72/header-cleanup.js
-          grep -q "origin.click()" src/v72/header-cleanup.js
-          grep -q "nativeFabItems" src/v72/header-cleanup.js
-          grep -q "restoreSettings" src/v72/header-cleanup.js
-          grep -q "focuscal-v75-safe-feature-menu" sw.js
+          grep -q "const BUILD='76'" index.html
+          grep -q "src/v76/feature-menu.js?v=" index.html
+          ! grep -q '<script defer src="./src/v71/action-menu.js?v=' index.html
+          ! grep -q '<script defer src="./src/v72/header-cleanup.js?v=' index.html
+          grep -q "stopImmediatePropagation" src/v76/feature-menu.js
+          grep -q "harvestNative" src/v76/feature-menu.js
+          grep -q "origin.click()" src/v76/feature-menu.js
+          grep -q "筋トレ記録" src/v76/feature-menu.js
+          grep -q "フレーズ帳" src/v76/feature-menu.js
+          grep -q "お祝い" src/v76/feature-menu.js
+          grep -q "自動予定最適化" src/v76/feature-menu.js
+          grep -q "共同スペース" src/v76/feature-menu.js
+          grep -q "フィードバック" src/v76/feature-menu.js
+          grep -q "focuscal-v76-single-feature-menu" sw.js
       - name: Core v70 contracts
         run: |
           grep -q "findSlot" src/v70/auto-planner.js
