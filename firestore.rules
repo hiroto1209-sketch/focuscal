@@ -8,6 +8,9 @@ service cloud.firestore {
     function canViewCalendar(ownerUid){ return signedIn() && (request.auth.uid == ownerUid || (exists(/databases/$(database)/documents/peekPermissions/$(permissionId(ownerUid,request.auth.uid))) && get(/databases/$(database)/documents/peekPermissions/$(permissionId(ownerUid,request.auth.uid))).data.active == true)); }
 
     match /users/{uid}{ allow read, create, update, delete: if isSelf(uid); }
+    match /pushTokens/{uid}{
+      allow read, create, update, delete: if isSelf(uid) && request.resource.data.uid == request.auth.uid;
+    }
     match /shareCodes/{code}{
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid && request.resource.data.keys().hasOnly(['uid','createdAt']);
