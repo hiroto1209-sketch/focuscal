@@ -41,22 +41,22 @@ jobs:
           node --check scripts/verify-focuscal.mjs
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
-      - name: Single feature menu contract
+      - name: Feature menu runtime contract
         run: |
-          grep -q "const BUILD='76'" index.html
+          grep -q "const BUILD='77'" index.html
           grep -q "src/v76/feature-menu.js?v=" index.html
           ! grep -q '<script defer src="./src/v71/action-menu.js?v=' index.html
           ! grep -q '<script defer src="./src/v72/header-cleanup.js?v=' index.html
+          grep -q "const BUILD='77'" src/v76/feature-menu.js
+          grep -q "STYLE_TEXT" src/v76/feature-menu.js
+          ! grep -q "CSS.escape" src/v76/feature-menu.js
+          grep -q "hasKey" src/v76/feature-menu.js
           grep -q "stopImmediatePropagation" src/v76/feature-menu.js
-          grep -q "harvestNative" src/v76/feature-menu.js
+          grep -q "fab-fit" src/v76/feature-menu.js
+          grep -q "fab-book" src/v76/feature-menu.js
+          grep -q "fab-party" src/v76/feature-menu.js
           grep -q "origin.click()" src/v76/feature-menu.js
-          grep -q "筋トレ記録" src/v76/feature-menu.js
-          grep -q "フレーズ帳" src/v76/feature-menu.js
-          grep -q "お祝い" src/v76/feature-menu.js
-          grep -q "自動予定最適化" src/v76/feature-menu.js
-          grep -q "共同スペース" src/v76/feature-menu.js
-          grep -q "フィードバック" src/v76/feature-menu.js
-          grep -q "focuscal-v76-single-feature-menu" sw.js
+          grep -q "focuscal-v77-feature-menu-runtime-fix" sw.js
       - name: Core v70 contracts
         run: |
           grep -q "findSlot" src/v70/auto-planner.js
