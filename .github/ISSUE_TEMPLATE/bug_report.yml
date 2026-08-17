@@ -1,0 +1,46 @@
+name: 🐛 不具合報告
+description: FocusCalで起きた不具合を最短で再現・修正するためのフォームです。
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        報告ありがとうございます。再現に必要な情報だけで大丈夫です。
+  - type: textarea
+    id: what
+    attributes:
+      label: 何が起きましたか？
+      description: 実際に起きたことを書いてください。
+      placeholder: 例）予定詳細を開いたあと、下へスクロールできません。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 本来どうなってほしいですか？
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      placeholder: |
+        1. カレンダーを開く
+        2. ○日をタップ
+        3. ...
+  - type: dropdown
+    id: impact
+    attributes:
+      label: 影響度
+      options:
+        - 通常
+        - かなり困る
+        - 使えない / データに影響
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 端末・環境
+      description: アプリ内フィードバックから来た場合は自動生成された環境情報を貼ってください。
+      placeholder: iPhone / Safari / FocusCal build など
