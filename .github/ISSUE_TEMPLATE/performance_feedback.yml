@@ -1,0 +1,22 @@
+name: ⚡ 動作・速度の問題
+description: 重い、遅い、反応しない、読み込みが長い場合はこちら。
+title: "[Performance] "
+body:
+  - type: textarea
+    id: when
+    attributes:
+      label: どんな操作の時に遅くなりますか？
+    validations:
+      required: true
+  - type: textarea
+    id: symptom
+    attributes:
+      label: どんな症状ですか？
+      placeholder: 固まる / 表示まで時間がかかる / タップが反応しない など
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 端末・環境
+      placeholder: iPhone / Safari / FocusCal build など
