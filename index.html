@@ -8,24 +8,30 @@
 <style>html,body{margin:0;background:#09090f;color:#eee;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;min-height:100%}#boot{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center}#boot b{display:block;font-size:18px;margin-bottom:8px}#boot small{color:#777}</style>
 </head>
 <body>
-<div id="boot"><div><b>FocusCalを起動しています</b><small>v60 · feedback acceleration pipeline</small></div></div>
+<div id="boot"><div><b>FocusCalを起動しています</b><small>v70 · intelligent life operating system</small></div></div>
 <script>
 (async()=>{
-  const BUILD='60';
+  const BUILD='70';
   try{
     const res=await fetch('./app.html?v='+BUILD,{cache:'no-store'});
     if(!res.ok) throw new Error('app.html '+res.status);
     let html=await res.text();
-    html=html
-      .replace(/<script[^>]*src=["']\.\/firebase-config\.js[^"']*["'][^>]*><\/script>/gi,'')
-      .replace(/<script[^>]*src=["']\.\/peek(?:-v\d+)?\.js[^"']*["'][^>]*><\/script>/gi,'')
-      .replace(/<script[^>]*src=["']\.\/enhancements\.js[^"']*["'][^>]*><\/script>/gi,'')
-      .replace(/<script[^>]*src=["']\.\/ui-polish-v57\.js[^"']*["'][^>]*><\/script>/gi,'')
-      .replace(/<script[^>]*src=["']\.\/peek-calendar-v58\.js[^"']*["'][^>]*><\/script>/gi,'')
-      .replace(/<script[^>]*src=["']\.\/peek-appearance-live-v58\.js[^"']*["'][^>]*><\/script>/gi,'')
-      .replace(/<script[^>]*src=["']\.\/peek-cell-style-v59\.js[^"']*["'][^>]*><\/script>/gi,'')
-      .replace(/<script[^>]*src=["']\.\/feedback-v60\.js[^"']*["'][^>]*><\/script>/gi,'');
-    const boot=`<script>window.FOCUSCAL_BOOT_BUILD='${BUILD}';<\/script><script src="./firebase-config.js?v=${BUILD}"><\/script><script src="./peek.js?v=${BUILD}"><\/script><script defer src="./enhancements.js?v=${BUILD}"><\/script><script defer src="./ui-polish-v57.js?v=${BUILD}"><\/script><script defer src="./peek-calendar-v58.js?v=${BUILD}"><\/script><script defer src="./peek-appearance-live-v58.js?v=${BUILD}"><\/script><script defer src="./peek-cell-style-v59.js?v=${BUILD}"><\/script><script defer src="./feedback-v60.js?v=${BUILD}"><\/script>`;
+    const patterns=['firebase-config.js','peek.js','enhancements.js','ui-polish-v57.js','peek-calendar-v58.js','peek-appearance-live-v58.js','peek-cell-style-v59.js','feedback-v60.js','src/v70/auto-planner.js','src/v70/account.js','src/v70/collaboration.js','src/v70/notifications.js','src/v70/observability.js'];
+    patterns.forEach(p=>{const safe=p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');html=html.replace(new RegExp(`<script[^>]*src=["']\\./${safe}[^"']*["'][^>]*><\\/script>`,'gi'),'')});
+    const boot=`<script>window.FOCUSCAL_BOOT_BUILD='${BUILD}';<\/script>
+<script src="./firebase-config.js?v=${BUILD}"><\/script>
+<script src="./peek.js?v=${BUILD}"><\/script>
+<script defer src="./enhancements.js?v=${BUILD}"><\/script>
+<script defer src="./ui-polish-v57.js?v=${BUILD}"><\/script>
+<script defer src="./peek-calendar-v58.js?v=${BUILD}"><\/script>
+<script defer src="./peek-appearance-live-v58.js?v=${BUILD}"><\/script>
+<script defer src="./peek-cell-style-v59.js?v=${BUILD}"><\/script>
+<script defer src="./feedback-v60.js?v=${BUILD}"><\/script>
+<script defer src="./src/v70/auto-planner.js?v=${BUILD}"><\/script>
+<script defer src="./src/v70/account.js?v=${BUILD}"><\/script>
+<script defer src="./src/v70/collaboration.js?v=${BUILD}"><\/script>
+<script defer src="./src/v70/notifications.js?v=${BUILD}"><\/script>
+<script defer src="./src/v70/observability.js?v=${BUILD}"><\/script>`;
     html=html.replace('</head>',boot+'</head>');
     document.open();document.write(html);document.close();
   }catch(err){
