@@ -1,59 +1,33 @@
 (()=>{'use strict';
-const BUILD='74';
+const BUILD='75';
 const PRESERVE=new Set(['btn-today','btn-prev','btn-next','btn-undo','btn-redo','settings-btn']);
-const LABELS={
-  'feedback-btn':'フィードバック','fc-feedback-btn':'フィードバック',
-  'peek-btn':'覗かせて頂く','fc-peek-btn':'覗かせて頂く',
-  'fc-ai-btn':'自動予定最適化','fc-account-btn':'アカウント',
-  'fc-collab-btn':'共同スペース','fc-notify-btn':'通知センター',
-  'pb-open':'フレーズ帳','fit-open':'筋トレ記録','party-open':'お祝い'
-};
+const LABELS={'feedback-btn':'フィードバック','fc-feedback-btn':'フィードバック','peek-btn':'覗かせて頂く','fc-peek-btn':'覗かせて頂く','fc-ai-btn':'自動予定最適化','fc-account-btn':'アカウント','fc-collab-btn':'共同スペース','fc-notify-btn':'通知センター','pb-open':'フレーズ帳','fit-open':'筋トレ記録','party-open':'お祝い'};
 const FEATURE_RE=/フィードバック|覗|自動予定|アカウント|共同|通知|フレーズ|筋トレ|お祝い|💬|🧠|👤|🤝|🔔|👀/;
 const CSS=`
 #header-row{overflow:visible!important;min-width:0!important;display:flex!important;align-items:center!important}
 #settings-btn{display:flex!important;visibility:visible!important;opacity:1!important;flex:0 0 auto!important;order:99!important}
-.fc-secondary-pending{display:none!important}
-#fab-wrap .fc-v74-action,#fab-menu .fc-v74-action,.fab-wrap .fc-v74-action,#fab-container .fc-v74-action{display:flex!important;align-items:center!important;justify-content:center!important;position:relative!important}
-#fab-wrap .fc-v74-action .fab-label,#fab-menu .fc-v74-action .fab-label,.fab-wrap .fc-v74-action .fab-label,#fab-container .fc-v74-action .fab-label{pointer-events:none}
-@media(max-width:520px){#header-row{gap:6px!important}#fab-wrap .fc-v74-action,#fab-menu .fc-v74-action,.fab-wrap .fc-v74-action,#fab-container .fc-v74-action{width:54px;height:54px;border-radius:50%;font-size:1.18rem}}
+.fc-v75-origin-hidden{position:fixed!important;left:-9999px!important;top:-9999px!important;opacity:0!important;pointer-events:none!important;width:1px!important;height:1px!important;overflow:hidden!important}
+#fc-v75-menu{position:fixed;right:18px;bottom:calc(102px + env(safe-area-inset-bottom,0px));z-index:170;display:none;flex-direction:column;gap:10px;align-items:flex-end;max-height:64dvh;overflow:auto;padding:8px 4px}
+#fc-v75-menu.open{display:flex}
+.fc-v75-proxy{display:flex;align-items:center;gap:10px;min-width:176px;max-width:min(76vw,280px);padding:11px 14px;border-radius:18px;border:1px solid rgba(150,120,255,.28);background:rgba(20,15,38,.96);color:#f5f2ff;box-shadow:0 12px 32px rgba(0,0,0,.35);backdrop-filter:blur(16px);font:700 .76rem/1.2 -apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif}
+.fc-v75-proxy .icon{font-size:1.2rem;line-height:1}.fc-v75-proxy .label{flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:520px){#header-row{gap:6px!important}#fc-v75-menu{right:14px;bottom:calc(96px + env(safe-area-inset-bottom,0px))}.fc-v75-proxy{min-width:168px;padding:10px 13px}}
 `;
-function style(){if(document.getElementById('fc-v74-header-style'))return;const s=document.createElement('style');s.id='fc-v74-header-style';s.textContent=CSS;document.head.appendChild(s)}
-function fabWrap(){return document.getElementById('fab-wrap')||document.getElementById('fab-menu')||document.querySelector('.fab-wrap')||document.getElementById('fab-container')}
+function style(){if(document.getElementById('fc-v75-header-style'))return;const s=document.createElement('style');s.id='fc-v75-header-style';s.textContent=CSS;document.head.appendChild(s)}
 function mainFab(){return document.getElementById('fab-main')||document.querySelector('#fab-wrap > button:last-child,#fab-menu > button:last-child,.fab-wrap > button:last-child,#fab-container > button:last-child')}
 function textOf(el){return `${el.getAttribute?.('title')||''} ${el.getAttribute?.('aria-label')||''} ${(el.textContent||'').trim()}`.trim()}
 function labelFor(el){return LABELS[el.id]||el.getAttribute?.('aria-label')||el.getAttribute?.('title')||((el.textContent||'').trim()||'機能')}
-function inTopArea(el){try{const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&r.top<190&&r.bottom>40}catch{return false}}
-function looksSecondary(el){
-  if(!el||el.nodeType!==1||PRESERVE.has(el.id)||el.id==='fab-main')return false;
-  const wrap=fabWrap();if(wrap&&wrap.contains(el))return false;
-  if(LABELS[el.id])return true;
-  const txt=textOf(el);if(FEATURE_RE.test(txt))return true;
-  if(el.matches?.('.nav-btn,[data-fc-secondary-action]')&&inTopArea(el))return true;
-  /* Final safety net for old header controls: interactive circular controls in the top area whose text is an emoji feature icon. */
-  if(inTopArea(el)&&el.matches?.('button,[role="button"],a,.nav-btn')&&/^(💬|🧠|👤|🤝|🔔|👀)$/.test((el.textContent||'').trim()))return true;
-  return false;
-}
-function makeLabel(el){if(el.querySelector?.('.fab-label'))return;const sp=document.createElement('span');sp.className='fab-label';sp.textContent=labelFor(el);el.appendChild(sp)}
-function move(el){
-  if(!looksSecondary(el))return;
-  el.classList.add('fc-secondary-pending');
-  const wrap=fabWrap(),main=mainFab();if(!wrap||!main)return;
-  el.classList.remove('nav-btn','fc-secondary-pending');el.classList.add('fab-item','fc-v74-action');el.dataset.fcV74Moved='1';makeLabel(el);
-  wrap.insertBefore(el,main);el.setAttribute('data-fc-secondary-action','1');if(!el.getAttribute('aria-label'))el.setAttribute('aria-label',labelFor(el));
-}
-function restoreSettings(){
-  const settings=document.getElementById('settings-btn'),header=document.getElementById('header-row');if(!settings)return;
-  settings.hidden=false;settings.classList.remove('fc-secondary-pending','fab-item','fc-v71-action','fc-v72-action','fc-v73-action','fc-v74-action');settings.classList.add('nav-btn');delete settings.dataset.fcSecondaryAction;
-  settings.style.setProperty('display','flex','important');settings.style.setProperty('visibility','visible','important');settings.style.setProperty('opacity','1','important');
-  if(header&&settings.parentElement!==header)header.appendChild(settings);
-}
-function clean(){
-  style();restoreSettings();
-  /* Scan all possible interactive controls because old FocusCal modules do not all use <button>. */
-  document.querySelectorAll('button,[role="button"],a.nav-btn,.nav-btn').forEach(move);
-  Object.keys(LABELS).forEach(id=>{const el=document.getElementById(id);if(el)move(el)});
-  restoreSettings();
-}
-function boot(){clean();let t;const mo=new MutationObserver(()=>{clearTimeout(t);t=setTimeout(clean,12)});mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','hidden','title','aria-label']});[0,40,100,220,450,900,1600,2800,5000,8000].forEach(ms=>setTimeout(clean,ms));window.addEventListener('focuscal:data-changed',clean);window.addEventListener('pageshow',clean);window.FocusCalHeaderCleanup={clean,build:BUILD,preserved:[...PRESERVE]}}
+function iconFor(el){const t=(el.textContent||'').trim();const m=t.match(/💬|🧠|👤|🤝|🔔|👀|💪|📖|🎉|⚙️|✨|⭐|✦/);return m?.[0]||'✦'}
+function inTopArea(el){try{const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&r.top<220&&r.bottom>30}catch{return false}}
+function isFeature(el){if(!el||el.nodeType!==1||PRESERVE.has(el.id)||el.id==='fab-main'||el.id==='fc-v75-menu'||el.classList?.contains('fc-v75-proxy'))return false;if(LABELS[el.id])return true;const txt=textOf(el);if(FEATURE_RE.test(txt))return true;if(el.matches?.('.nav-btn,[data-fc-secondary-action]')&&inTopArea(el))return true;return false}
+function nativeFabItems(){const main=mainFab();if(!main||!main.parentElement)return[];return [...main.parentElement.children].filter(el=>el!==main&&el.matches?.('button,[role="button"],a,.fab-item'))}
+function ensureMenu(){let menu=document.getElementById('fc-v75-menu');if(menu)return menu;menu=document.createElement('div');menu.id='fc-v75-menu';menu.setAttribute('aria-label','FocusCal 機能メニュー');document.body.appendChild(menu);return menu}
+function proxyKey(el){if(el.id)return`id:${el.id}`;if(el.dataset.fcProxyKey)return el.dataset.fcProxyKey;const k=`anon:${labelFor(el)}:${Math.random().toString(36).slice(2,8)}`;el.dataset.fcProxyKey=k;return k}
+function addProxy(origin){if(!origin||origin.id==='fab-main'||origin.classList?.contains('fc-v75-proxy'))return;const menu=ensureMenu(),key=proxyKey(origin);if(menu.querySelector(`[data-origin-key="${CSS.escape(key)}"]`))return;const b=document.createElement('button');b.type='button';b.className='fc-v75-proxy';b.dataset.originKey=key;b.innerHTML=`<span class="icon">${iconFor(origin)}</span><span class="label"></span>`;b.querySelector('.label').textContent=labelFor(origin);b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();menu.classList.remove('open');try{origin.click()}catch(err){console.error('[FocusCal menu proxy]',err)}});menu.appendChild(b)}
+function hideOrigin(origin){if(!origin||origin.id==='fab-main'||PRESERVE.has(origin.id))return;origin.classList.add('fc-v75-origin-hidden')}
+function restoreSettings(){const settings=document.getElementById('settings-btn'),header=document.getElementById('header-row');if(!settings)return;settings.hidden=false;settings.classList.remove('fc-v75-origin-hidden','fab-item','fc-v71-action','fc-v72-action','fc-v73-action','fc-v74-action');settings.classList.add('nav-btn');settings.style.setProperty('display','flex','important');settings.style.setProperty('visibility','visible','important');settings.style.setProperty('opacity','1','important');if(header&&settings.parentElement!==header)header.appendChild(settings)}
+function bindMain(){const main=mainFab();if(!main||main.dataset.fcV75Bound==='1')return;main.dataset.fcV75Bound='1';main.addEventListener('click',()=>{requestAnimationFrame(()=>ensureMenu().classList.toggle('open'))});document.addEventListener('click',e=>{const menu=ensureMenu();if(!menu.contains(e.target)&&e.target!==main&&!main.contains?.(e.target))menu.classList.remove('open')},{capture:true})}
+function clean(){style();restoreSettings();ensureMenu();const candidates=new Set();document.querySelectorAll('button,[role="button"],a.nav-btn,.nav-btn').forEach(el=>{if(isFeature(el))candidates.add(el)});Object.keys(LABELS).forEach(id=>{const el=document.getElementById(id);if(el)candidates.add(el)});nativeFabItems().forEach(el=>candidates.add(el));candidates.forEach(el=>{if(el.id==='settings-btn'||el.id==='fab-main')return;addProxy(el);hideOrigin(el)});restoreSettings();bindMain()}
+function boot(){clean();let t;const mo=new MutationObserver(()=>{clearTimeout(t);t=setTimeout(clean,20)});mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','hidden','title','aria-label']});[0,80,180,400,900,1600,2800,5000,8000].forEach(ms=>setTimeout(clean,ms));window.addEventListener('pageshow',clean);window.FocusCalHeaderCleanup={clean,build:BUILD,preserved:[...PRESERVE]}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
