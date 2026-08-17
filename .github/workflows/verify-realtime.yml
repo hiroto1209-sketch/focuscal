@@ -42,17 +42,16 @@ jobs:
           node --check scripts/verify-focuscal.mjs
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
-      - name: Structural header repair contract
+      - name: Safe feature menu recovery contract
         run: |
-          grep -q "const BUILD='74'" index.html
-          grep -q "src/v72/header-cleanup.js?v=" index.html
-          grep -q "const BUILD='74'" src/v72/header-cleanup.js
-          grep -q "button,\[role=\"button\"\]" src/v72/header-cleanup.js
-          grep -q "fc-secondary-pending" src/v72/header-cleanup.js
+          grep -q "const BUILD='75'" index.html
+          grep -q "legacyMoverDisabled:true" src/v71/action-menu.js
+          grep -q "const BUILD='75'" src/v72/header-cleanup.js
+          grep -q "fc-v75-menu" src/v72/header-cleanup.js
+          grep -q "origin.click()" src/v72/header-cleanup.js
+          grep -q "nativeFabItems" src/v72/header-cleanup.js
           grep -q "restoreSettings" src/v72/header-cleanup.js
-          grep -q "const BUILD='73'" src/v70/auto-planner.js
-          grep -q "grid-template-columns:1fr" src/v70/auto-planner.js
-          grep -q "focuscal-v74-structural-header-repair" sw.js
+          grep -q "focuscal-v75-safe-feature-menu" sw.js
       - name: Core v70 contracts
         run: |
           grep -q "findSlot" src/v70/auto-planner.js
