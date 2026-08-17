@@ -1,18 +1,26 @@
-name: Verify realtime boot
+name: Verify FocusCal
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: focuscal-verify-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+
       - name: JavaScript syntax
         run: |
           node --check peek.js
@@ -21,7 +29,13 @@ jobs:
           node --check peek-calendar-v58.js
           node --check peek-appearance-live-v58.js
           node --check peek-cell-style-v59.js
+          node --check feedback-v60.js
           node --check sw.js
+          node --check scripts/verify-focuscal.mjs
+
+      - name: Build integrity smoke test
+        run: node scripts/verify-focuscal.mjs
+
       - name: Realtime boot wiring
         run: |
           test -f app.html
@@ -33,9 +47,11 @@ jobs:
           grep -q "peek-calendar-v58.js?v=" index.html
           grep -q "peek-appearance-live-v58.js?v=" index.html
           grep -q "peek-cell-style-v59.js?v=" index.html
+          grep -q "feedback-v60.js?v=" index.html
           grep -q "FOCUSCAL_FIREBASE_CONFIG" firebase-config.js
           grep -q "リアルタイム共有に接続済み" peek.js
           if grep -q "リアルタイム共有は準備済みです" peek.js; then exit 1; fi
+
       - name: Trusted mirror contract
         run: |
           grep -q "richDays" peek-calendar-v58.js
@@ -46,10 +62,25 @@ jobs:
           grep -q "effect" peek-cell-style-v59.js
           grep -q "fc-shared-colored" peek-cell-style-v59.js
           grep -q "peekVisibility" peek-cell-style-v59.js
-          grep -q "focuscal-v59-trusted-cell-styles" sw.js
-      - name: Privacy and Firestore contract
+
+      - name: Feedback pipeline contract
         run: |
+          grep -q "collection(db,'feedback')" feedback-v60.js
+          grep -q "GitHub" feedback-v60.js
+          grep -q "userAgent" feedback-v60.js
+          grep -q "match /feedback/{feedbackId}" firestore.rules
+          grep -q "request.resource.data.authorUid == request.auth.uid" firestore.rules
+          test -f .github/ISSUE_TEMPLATE/bug_report.yml
+          test -f .github/ISSUE_TEMPLATE/feature_request.yml
+          test -f .github/ISSUE_TEMPLATE/ui_feedback.yml
+          test -f .github/ISSUE_TEMPLATE/performance_feedback.yml
+          grep -q "focuscal-v60-feedback-pipeline" sw.js
+
+      - name: Security guardrails
+        run: |
+          if grep -q "allow read, write: if true" firestore.rules; then echo "Unsafe Firestore rule"; exit 1; fi
           grep -q "peekVisibility!=='private'" peek-cell-style-v59.js
+          grep -q "allow read, update, delete: if false" firestore.rules
           grep -q "match /events/{eventId}" firestore.rules
           grep -q "match /peekRequests/{requestId}" firestore.rules
           grep -q "match /peekPermissions/{permission}" firestore.rules
