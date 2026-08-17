@@ -8,10 +8,10 @@
 <style>html,body{margin:0;background:#09090f;color:#eee;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;min-height:100%}#boot{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center}#boot b{display:block;font-size:18px;margin-bottom:8px}#boot small{color:#777}</style>
 </head>
 <body>
-<div id="boot"><div><b>FocusCalを起動しています</b><small>v73 · mobile UI repair</small></div></div>
+<div id="boot"><div><b>FocusCalを起動しています</b><small>v74 · structural header repair</small></div></div>
 <script>
 (async()=>{
-  const BUILD='73';
+  const BUILD='74';
   try{
     const res=await fetch('./app.html?v='+BUILD,{cache:'no-store'});
     if(!res.ok) throw new Error('app.html '+res.status);
