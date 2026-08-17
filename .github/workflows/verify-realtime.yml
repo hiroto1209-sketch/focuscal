@@ -36,19 +36,20 @@ jobs:
           node --check src/v70/notifications.js
           node --check src/v70/observability.js
           node --check src/v71/action-menu.js
+          node --check src/v72/header-cleanup.js
           node --check functions/index.js
           node --check sw.js
           node --check scripts/verify-focuscal.mjs
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
-      - name: Clean header action-menu contract
+      - name: Strict clean header contract
         run: |
-          grep -q "const BUILD='71'" index.html
-          grep -q "src/v71/action-menu.js?v=" index.html
-          grep -q "settings-btn" src/v71/action-menu.js
-          grep -q "fab-item" src/v71/action-menu.js
-          grep -q "querySelectorAll('.nav-btn')" src/v71/action-menu.js
-          grep -q "focuscal-v71-clean-action-menu" sw.js
+          grep -q "const BUILD='72'" index.html
+          grep -q "src/v72/header-cleanup.js?v=" index.html
+          grep -q "header.querySelectorAll('button')" src/v72/header-cleanup.js
+          grep -q "settings-btn" src/v72/header-cleanup.js
+          grep -q "fab-item" src/v72/header-cleanup.js
+          grep -q "focuscal-v72-strict-clean-header" sw.js
       - name: Core v70 contracts
         run: |
           grep -q "findSlot" src/v70/auto-planner.js
