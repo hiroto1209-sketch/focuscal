@@ -1,0 +1,22 @@
+name: 💡 機能アイデア
+description: FocusCalをもっと便利・唯一無二にするための提案フォームです。
+title: "[Idea] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: どんな困りごとを解決したいですか？
+      placeholder: 例）恋人と空いている時間を探すのが面倒。
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: どんな機能がほしいですか？
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: それがあると何が良くなりますか？
+      placeholder: 継続しやすい、予定調整が速い、迷わない、など
