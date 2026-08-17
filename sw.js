@@ -1,5 +1,5 @@
-const CACHE='focuscal-v59-trusted-cell-styles';
-const CORE=['./index.html','./app.html','./manifest.json','./icon-192.png','./icon-512.png','./enhancements.js','./ui-polish-v57.js','./peek-calendar-v58.js','./peek-appearance-live-v58.js','./peek-cell-style-v59.js'];
+const CACHE='focuscal-v60-feedback-pipeline';
+const CORE=['./index.html','./app.html','./manifest.json','./icon-192.png','./icon-512.png','./enhancements.js','./ui-polish-v57.js','./peek-calendar-v58.js','./peek-appearance-live-v58.js','./peek-cell-style-v59.js','./feedback-v60.js'];
 
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{
@@ -35,7 +35,7 @@ self.addEventListener('fetch',event=>{
     return;
   }
 
-  if(path.endsWith('/app.html')||path.endsWith('/peek.js')||path.endsWith('/firebase-config.js')||path.endsWith('/enhancements.js')||path.endsWith('/ui-polish-v57.js')||path.endsWith('/peek-calendar-v58.js')||path.endsWith('/peek-appearance-live-v58.js')||path.endsWith('/peek-cell-style-v59.js')||path.endsWith('/sw.js')){
+  if(path.endsWith('/app.html')||path.endsWith('/peek.js')||path.endsWith('/firebase-config.js')||path.endsWith('/enhancements.js')||path.endsWith('/ui-polish-v57.js')||path.endsWith('/peek-calendar-v58.js')||path.endsWith('/peek-appearance-live-v58.js')||path.endsWith('/peek-cell-style-v59.js')||path.endsWith('/feedback-v60.js')||path.endsWith('/sw.js')){
     event.respondWith(networkFirst(event.request));
     return;
   }
