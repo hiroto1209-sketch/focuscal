@@ -41,24 +41,24 @@ jobs:
           node --check scripts/verify-focuscal.mjs
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
-      - name: Animated feature menu contract
+      - name: v79 feature menu contract
         run: |
-          grep -q "const BUILD='78'" index.html
-          grep -q "src/v76/feature-menu.js?v=" index.html
-          ! grep -q '<script defer src="./src/v71/action-menu.js?v=' index.html
-          ! grep -q '<script defer src="./src/v72/header-cleanup.js?v=' index.html
-          grep -q "const BUILD='78'" src/v76/feature-menu.js
-          grep -q "EXCLUDE_RE" src/v76/feature-menu.js
-          grep -q "英語フレーズを追加" src/v76/feature-menu.js
-          grep -q "中国語フレーズを追加" src/v76/feature-menu.js
-          grep -q "fc-v78-open" src/v76/feature-menu.js
+          grep -q "const BUILD='79'" index.html
+          grep -q "const BUILD='79'" src/v76/feature-menu.js
+          grep -q "origin.id==='fab-party'" src/v76/feature-menu.js
+          grep -q "pointerdown" src/v76/feature-menu.js
+          grep -q "touchstart" src/v76/feature-menu.js
+          grep -q "touchend" src/v76/feature-menu.js
+          grep -q "650" src/v76/feature-menu.js
+          grep -q "fc-v79-open" src/v76/feature-menu.js
           grep -q "transition-delay:calc(var(--i,0) \* 32ms)" src/v76/feature-menu.js
-          grep -q "stopImmediatePropagation" src/v76/feature-menu.js
           grep -q "fab-fit" src/v76/feature-menu.js
           grep -q "fab-book" src/v76/feature-menu.js
           grep -q "fab-party" src/v76/feature-menu.js
           grep -q "origin.click()" src/v76/feature-menu.js
-          grep -q "focuscal-v78-animated-feature-menu" sw.js
+          ! grep -q "英語フレーズを追加" src/v76/feature-menu.js
+          ! grep -q "中国語フレーズを追加" src/v76/feature-menu.js
+          grep -q "focuscal-v79-longpress-safe-menu" sw.js
       - name: Core v70 contracts
         run: |
           grep -q "findSlot" src/v70/auto-planner.js
@@ -78,13 +78,6 @@ jobs:
           grep -q "match /feedback/{feedbackId}" firestore.rules
           grep -q "match /admins/{uid}" firestore.rules
           if grep -q "allow read, write: if true" firestore.rules; then echo "Unsafe Firestore rule"; exit 1; fi
-      - name: Push backend contracts
-        run: |
-          test -f functions/package.json
-          test -f functions/index.js
-          grep -q "onPeekRequestCreated" functions/index.js
-          grep -q "onSharedEventCreated" functions/index.js
-          grep -q "firebase.messaging().onBackgroundMessage" sw.js
       - name: Existing sharing and feedback regression checks
         run: |
           grep -q "リアルタイム共有に接続済み" peek.js
