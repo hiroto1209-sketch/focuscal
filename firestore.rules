@@ -71,7 +71,7 @@ service cloud.firestore {
                     && request.resource.data.ownerUid == request.auth.uid
                     && get(/databases/$(database)/documents/spaces/$(request.resource.data.spaceId)).data.ownerUid == request.auth.uid;
       allow update: if false;
-      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow delete: if signedIn() && ((resource.data.ownerUid is string && resource.data.ownerUid == request.auth.uid) || spaceOwner(resource.data.spaceId));
     }
     match /spaceEvents/{eventId}{
       allow create: if signedIn() && request.resource.data.createdBy == request.auth.uid && spaceMember(request.resource.data.spaceId);
@@ -97,16 +97,8 @@ service cloud.firestore {
       allow update: if isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','priorityScore','adminNote','updatedAt']) && request.resource.data.status in ['new','investigating','planned','resolved','wontfix'] && request.resource.data.priorityScore is number && request.resource.data.priorityScore >= 0 && request.resource.data.priorityScore <= 999 && request.resource.data.adminNote is string && request.resource.data.adminNote.size() <= 2000;
       allow delete: if false;
     }
-    match /clientErrors/{id}{
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow read: if isAdmin();
-      allow update, delete: if false;
-    }
-    match /productEvents/{id}{
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow read: if isAdmin();
-      allow update, delete: if false;
-    }
+    match /clientErrors/{id}{ allow create: if signedIn() && request.resource.data.uid == request.auth.uid; allow read: if isAdmin(); allow update, delete: if false; }
+    match /productEvents/{id}{ allow create: if signedIn() && request.resource.data.uid == request.auth.uid; allow read: if isAdmin(); allow update, delete: if false; }
     match /{document=**}{ allow read, write: if false; }
   }
 }
