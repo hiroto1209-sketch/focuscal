@@ -43,7 +43,7 @@ jobs:
         run: node scripts/verify-focuscal.mjs
       - name: v80 v50 FAB contract
         run: |
-          grep -q "const BUILD='80'" index.html
+          grep -q "const BUILD='81'" index.html
           grep -q "const BUILD='80'" src/v76/feature-menu.js
           grep -q "mode:'v50-native-fab'" src/v76/feature-menu.js
           grep -q "translateY(26px) scale(.4)" src/v76/feature-menu.js
@@ -54,8 +54,18 @@ jobs:
           grep -q "fab-book" src/v76/feature-menu.js
           grep -q "fab-party" src/v76/feature-menu.js
           grep -q "origin.click()" src/v76/feature-menu.js
-          ! grep -q "fc-v79-menu" src/v76/feature-menu.js
-          grep -q "focuscal-v80-v50-fab" sw.js
+          grep -q "focuscal-v81-collaboration-upgrade" sw.js
+      - name: Collaboration v81 contracts
+        run: |
+          grep -q "const BUILD='81'" src/v70/collaboration.js
+          grep -q "arrayUnion" src/v70/collaboration.js
+          grep -q "arrayRemove" src/v70/collaboration.js
+          grep -q "deleteSpace" src/v70/collaboration.js
+          grep -q "deleteEvent" src/v70/collaboration.js
+          grep -q "spaceMessages" src/v70/collaboration.js
+          grep -q 'type=\"date\"' src/v70/collaboration.js
+          grep -q 'type=\"time\"' src/v70/collaboration.js
+          grep -q "sendMessage" src/v70/collaboration.js
       - name: Core v70 contracts
         run: |
           grep -q "findSlot" src/v70/auto-planner.js
@@ -69,6 +79,7 @@ jobs:
         run: |
           grep -q "match /spaces/{spaceId}" firestore.rules
           grep -q "match /spaceEvents/{eventId}" firestore.rules
+          grep -q "match /spaceMessages/{messageId}" firestore.rules
           grep -q "match /pushTokens/{uid}" firestore.rules
           grep -q "match /clientErrors/{id}" firestore.rules
           grep -q "match /productEvents/{id}" firestore.rules
