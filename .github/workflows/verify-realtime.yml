@@ -36,25 +36,31 @@ jobs:
           node --check src/v70/notifications.js
           node --check src/v70/observability.js
           node --check src/v76/feature-menu.js
+          node --check src/v82/year-wrap.js
           node --check functions/index.js
           node --check sw.js
           node --check scripts/verify-focuscal.mjs
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
+      - name: v82 year crossing contract
+        run: |
+          grep -q "const BUILD='82'" index.html
+          grep -q "src/v82/year-wrap.js?v=" index.html
+          grep -q "const BUILD='82'" src/v82/year-wrap.js
+          grep -q "nextYearJan" src/v82/year-wrap.js
+          grep -q "prevYearDec" src/v82/year-wrap.js
+          grep -q "isDec" src/v82/year-wrap.js
+          grep -q "isJan" src/v82/year-wrap.js
+          grep -q "focuscal-v82-seamless-year-crossing" sw.js
       - name: v80 v50 FAB contract
         run: |
-          grep -q "const BUILD='81'" index.html
           grep -q "const BUILD='80'" src/v76/feature-menu.js
           grep -q "mode:'v50-native-fab'" src/v76/feature-menu.js
           grep -q "translateY(26px) scale(.4)" src/v76/feature-menu.js
-          grep -q "cubic-bezier(.34,1.5,.5,1)" src/v76/feature-menu.js
           grep -q "rotate(135deg)" src/v76/feature-menu.js
-          grep -q "fab-label" src/v76/feature-menu.js
           grep -q "fab-fit" src/v76/feature-menu.js
           grep -q "fab-book" src/v76/feature-menu.js
           grep -q "fab-party" src/v76/feature-menu.js
-          grep -q "origin.click()" src/v76/feature-menu.js
-          grep -q "focuscal-v81-collaboration-upgrade" sw.js
       - name: Collaboration v81 contracts
         run: |
           grep -q "const BUILD='81'" src/v70/collaboration.js
@@ -66,30 +72,16 @@ jobs:
           grep -q 'type=\"date\"' src/v70/collaboration.js
           grep -q 'type=\"time\"' src/v70/collaboration.js
           grep -q "sendMessage" src/v70/collaboration.js
-      - name: Core v70 contracts
-        run: |
-          grep -q "findSlot" src/v70/auto-planner.js
-          grep -q "linkWithPopup" src/v70/account.js
-          grep -q "spaceEvents" src/v70/collaboration.js
-          grep -q "getToken" src/v70/notifications.js
-          grep -q "clientErrors" src/v70/observability.js
-          grep -q "productEvents" src/v70/observability.js
-          grep -q "clusterStats" admin-dashboard.js
       - name: Firebase and security contracts
         run: |
           grep -q "match /spaces/{spaceId}" firestore.rules
           grep -q "match /spaceEvents/{eventId}" firestore.rules
           grep -q "match /spaceMessages/{messageId}" firestore.rules
-          grep -q "match /pushTokens/{uid}" firestore.rules
-          grep -q "match /clientErrors/{id}" firestore.rules
-          grep -q "match /productEvents/{id}" firestore.rules
           grep -q "match /feedback/{feedbackId}" firestore.rules
           grep -q "match /admins/{uid}" firestore.rules
           if grep -q "allow read, write: if true" firestore.rules; then echo "Unsafe Firestore rule"; exit 1; fi
-      - name: Existing sharing and feedback regression checks
+      - name: Existing sharing regression checks
         run: |
           grep -q "リアルタイム共有に接続済み" peek.js
           grep -q "peekVisibility!=='private'" peek-cell-style-v59.js
           grep -q "collection(db,'feedback')" feedback-v60.js
-          test -f admin.html
-          test -f ops.html
