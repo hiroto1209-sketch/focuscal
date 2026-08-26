@@ -42,16 +42,17 @@ jobs:
           node --check scripts/verify-focuscal.mjs
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
-      - name: v82 year crossing contract
+      - name: v83 smooth year crossing contract
         run: |
-          grep -q "const BUILD='82'" index.html
-          grep -q "src/v82/year-wrap.js?v=" index.html
-          grep -q "const BUILD='82'" src/v82/year-wrap.js
-          grep -q "nextYearJan" src/v82/year-wrap.js
-          grep -q "prevYearDec" src/v82/year-wrap.js
-          grep -q "isDec" src/v82/year-wrap.js
-          grep -q "isJan" src/v82/year-wrap.js
-          grep -q "focuscal-v82-seamless-year-crossing" sw.js
+          grep -q "const BUILD='83'" index.html
+          grep -q "const BUILD='83'" src/v82/year-wrap.js
+          grep -q "snapshotBoundary" src/v82/year-wrap.js
+          grep -q "animateCross" src/v82/year-wrap.js
+          grep -q "currentMonth" src/v82/year-wrap.js
+          grep -q "changeYear" src/v82/year-wrap.js
+          grep -q "translateX(\${dir>0?-w\*2:0}px)" src/v82/year-wrap.js
+          grep -q "transform .36s cubic-bezier(.32,.72,.33,1)" src/v82/year-wrap.js
+          grep -q "focuscal-v83-smooth-bidirectional-year-crossing" sw.js
       - name: v80 v50 FAB contract
         run: |
           grep -q "const BUILD='80'" src/v76/feature-menu.js
