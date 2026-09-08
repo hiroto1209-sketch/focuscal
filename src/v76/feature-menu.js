@@ -1,13 +1,12 @@
 (()=>{'use strict';
-const BUILD='80';
+const BUILD='85';
 const FEATURES=[
- ['peek-btn','👀','カレンダーを覗かせて頂く'],['fc-peek-btn','👀','カレンダーを覗かせて頂く'],
- ['fc-ai-btn','🧠','自動予定最適化'],['fc-account-btn','👤','アカウント'],['fc-collab-btn','🤝','共同スペース'],
+ ['fc-account-btn','👤','アカウント'],['fc-collab-btn','🤝','共有・共同'],
  ['fc-notify-btn','🔔','通知センター'],['feedback-btn','💬','フィードバック'],['fc-feedback-btn','💬','フィードバック']
 ];
+const HIDDEN_ORIGINS=new Set(['peek-btn','fc-peek-btn','fc-ai-btn']);
 const NATIVE=new Set(['fab-fit','fab-book','fab-party']);
 const STYLE=`
-/* v80: recreate the original v50 FAB behavior and keep all newer actions */
 #fab-cluster{pointer-events:none!important;overflow:visible!important}
 #fab-main{pointer-events:auto!important;transition:transform .28s cubic-bezier(.34,1.4,.5,1),box-shadow .2s!important}
 #fab-main:active{transform:scale(.9)!important}
@@ -29,15 +28,13 @@ function cleanupLegacy(){document.querySelectorAll('#fc-v77-menu,#fc-v78-menu,#f
 function meta(id){const x=FEATURES.find(v=>v[0]===id);return x?{icon:x[1],label:x[2]}:null}
 function proxyKey(id){return `fc-v80-${id}`}
 function closeSoon(){setTimeout(()=>cluster()?.classList.remove('open'),120)}
-function addProxy(origin){if(!origin?.id||NATIVE.has(origin.id))return;const c=cluster(),m=main(),x=meta(origin.id);if(!c||!m||!x)return;if(document.getElementById(proxyKey(origin.id)))return;
- const b=document.createElement('button');b.type='button';b.id=proxyKey(origin.id);b.className='fab-item fc-v80-proxy';b.title=x.label;b.setAttribute('aria-label',x.label);b.innerHTML=`${x.icon}<span class="fab-label"></span>`;b.querySelector('.fab-label').textContent=x.label;
- b.addEventListener('click',e=>{e.stopPropagation();origin.classList.remove('fc-v80-origin');try{origin.click()}catch(err){console.error('[FocusCal v80 feature]',x.label,err)}finally{queueMicrotask(()=>origin.classList.add('fc-v80-origin'));closeSoon()}});
- c.insertBefore(b,m);origin.classList.add('fc-v80-origin')}
+function addProxy(origin){if(!origin?.id||NATIVE.has(origin.id))return;const c=cluster(),m=main(),x=meta(origin.id);if(!c||!m||!x)return;if(document.getElementById(proxyKey(origin.id)))return;const b=document.createElement('button');b.type='button';b.id=proxyKey(origin.id);b.className='fab-item fc-v80-proxy';b.title=x.label;b.setAttribute('aria-label',x.label);b.innerHTML=`${x.icon}<span class="fab-label"></span>`;b.querySelector('.fab-label').textContent=x.label;b.addEventListener('click',e=>{e.stopPropagation();origin.classList.remove('fc-v80-origin');try{origin.click()}catch(err){console.error('[FocusCal v85 feature]',x.label,err)}finally{queueMicrotask(()=>origin.classList.add('fc-v80-origin'));closeSoon()}});c.insertBefore(b,m);origin.classList.add('fc-v80-origin')}
+function hideOrigins(){HIDDEN_ORIGINS.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.add('fc-v80-origin');const proxy=document.getElementById(proxyKey(id));if(proxy)proxy.remove()})}
 function ensureCurrentFeatures(){FEATURES.forEach(([id])=>{const el=document.getElementById(id);if(el)addProxy(el)})}
 function restoreNative(){['fab-fit','fab-book','fab-party'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.classList.remove('fc-v77-native-hidden','fc-v78-native-hidden','fc-v79-native-hidden','fc-v77-origin-hidden','fc-v78-origin-hidden','fc-v79-origin-hidden','fc-v80-origin');el.style.removeProperty('display');el.style.removeProperty('visibility');el.style.removeProperty('pointer-events')})}
 function applyDelays(){const items=[...(cluster()?.querySelectorAll(':scope > .fab-item')||[])];const n=items.length;items.forEach((el,i)=>{const fromMain=n-1-i;el.style.setProperty('--fc-v80-delay',`${Math.max(0,fromMain)*0.045}s`)})}
 function restoreHeader(){const s=document.getElementById('settings-btn'),h=document.getElementById('header-row');if(s&&h){s.hidden=false;s.style.setProperty('display','flex','important');s.style.setProperty('visibility','visible','important');s.style.setProperty('opacity','1','important');if(s.parentElement!==h)h.appendChild(s)}}
-function clean(){try{inject();cleanupLegacy();restoreNative();ensureCurrentFeatures();applyDelays();restoreHeader();document.documentElement.dataset.fcFeatureMenuBuild=BUILD}catch(err){console.error('[FocusCal v80 FAB]',err)}}
+function clean(){try{inject();cleanupLegacy();restoreNative();hideOrigins();ensureCurrentFeatures();applyDelays();restoreHeader();document.documentElement.dataset.fcFeatureMenuBuild=BUILD}catch(err){console.error('[FocusCal v85 FAB]',err)}}
 function boot(){clean();let t;const mo=new MutationObserver(()=>{clearTimeout(t);t=setTimeout(clean,30)});mo.observe(document.body,{subtree:true,childList:true});[0,100,250,500,1000,1800,3000,5000].forEach(ms=>setTimeout(clean,ms));window.addEventListener('pageshow',clean);window.FocusCalFeatureMenu={clean,build:BUILD,mode:'v50-native-fab'}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
