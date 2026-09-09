@@ -33,43 +33,35 @@ jobs:
           node --check src/v70/observability.js
           node --check src/v76/feature-menu.js
           node --check src/v82/year-wrap.js
-          node --check src/v89/faithful-peek.js
+          node --check src/v90/faithful-peek-lite.js
           node --check functions/index.js
           node --check sw.js
           node --check scripts/verify-focuscal.mjs
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
-      - name: v89 self-healing faithful peek contract
+      - name: v90 lightweight faithful peek contract
         run: |
-          grep -q "const BUILD='89'" index.html
-          grep -q "src/v89/faithful-peek.js?v=" index.html
-          grep -q "const BUILD='89'" src/v89/faithful-peek.js
-          grep -q "mirrorV89" src/v89/faithful-peek.js
-          grep -q "watchOwnerMonth" src/v89/faithful-peek.js
-          grep -q "sameMirror" src/v89/faithful-peek.js
-          grep -q "ownerUid:auth.currentUser.uid" src/v89/faithful-peek.js
-          grep -q "self-healing-canonical-mirror" src/v89/faithful-peek.js
-          grep -q "fc89-loading" src/v89/faithful-peek.js
-          grep -q "localWeekStart" src/v89/faithful-peek.js
-          grep -q "hexBg" src/v89/faithful-peek.js
-          grep -q "fx-neon" src/v89/faithful-peek.js
-          grep -q "fx-sparkle" src/v89/faithful-peek.js
-          grep -q "fx-rainbow" src/v89/faithful-peek.js
-          grep -q "fx-fire" src/v89/faithful-peek.js
-          grep -q "fx-glitch" src/v89/faithful-peek.js
-          grep -q "fx-aurora" src/v89/faithful-peek.js
-          grep -q "focuscal-v89-self-healing-faithful-peek" sw.js
-          ! grep -q '<script defer src="./peek-calendar-v58.js' index.html
-          ! grep -q '<script defer src="./peek-cell-style-v59.js' index.html
-          ! grep -q '<script defer src="./src/v85/peek-share-refinement.js' index.html
-          ! grep -q '<script defer src="./src/v87/faithful-peek.js' index.html
-          ! grep -q '<script defer src="./src/v88/faithful-peek.js' index.html
+          grep -q "const BUILD='90'" index.html
+          grep -q "src/v90/faithful-peek-lite.js?v=" index.html
+          grep -q "const BUILD='90'" src/v90/faithful-peek-lite.js
+          grep -q "single-listener-lightweight" src/v90/faithful-peek-lite.js
+          grep -q "stopImmediatePropagation" src/v90/faithful-peek-lite.js
+          grep -q "lastSig" src/v90/faithful-peek-lite.js
+          grep -q "contain:layout paint style" src/v90/faithful-peek-lite.js
+          grep -q "fx-neon" src/v90/faithful-peek-lite.js
+          grep -q "fx-fire" src/v90/faithful-peek-lite.js
+          grep -q "fx-aurora" src/v90/faithful-peek-lite.js
+          grep -q "focuscal-v90-lightweight-faithful-peek" sw.js
+          ! grep -q '<script defer src="./src/v89/faithful-peek.js' index.html
           ! grep -q '<script defer src="./src/v70/auto-planner.js' index.html
-      - name: Legacy overwrite root-cause guard
+      - name: Canonical sync performance guard
         run: |
-          grep -q "merge:false" peek.js
-          grep -q "watchOwnerMonth" src/v89/faithful-peek.js
-          grep -q "schedulePublish(y,m,45)" src/v89/faithful-peek.js
+          grep -q "merge:true" peek.js
+          grep -q "color,effect" peek.js
+          grep -q "fc_peek_sync_" peek.js
+          ! grep -q "ownerWatches" src/v90/faithful-peek-lite.js
+          ! grep -q "watchOwnerMonth" src/v90/faithful-peek-lite.js
+          ! grep -q "publishMonth" src/v90/faithful-peek-lite.js
       - name: Unified sharing contract
         run: |
           grep -q "const BUILD='85'" src/v70/collaboration.js
