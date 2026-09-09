@@ -37,30 +37,35 @@ jobs:
           node --check src/v76/feature-menu.js
           node --check src/v82/year-wrap.js
           node --check src/v85/peek-share-refinement.js
+          node --check src/v87/faithful-peek.js
           node --check functions/index.js
           node --check sw.js
           node --check scripts/verify-focuscal.mjs
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
-      - name: v86 faithful live peek mirror
+      - name: v87 faithful peek single-source contract
         run: |
-          grep -q "const BUILD='86'" index.html
+          grep -q "const BUILD='87'" index.html
+          grep -q "src/v87/faithful-peek.js?v=" index.html
+          grep -q "const BUILD='87'" src/v87/faithful-peek.js
+          grep -q "mirrorV87" src/v87/faithful-peek.js
+          grep -q "single-source-mirror" src/v87/faithful-peek.js
+          grep -q "allStoredMonths" src/v87/faithful-peek.js
+          grep -q "localWeekStart" src/v87/faithful-peek.js
+          grep -q "hexBg" src/v87/faithful-peek.js
+          grep -q "v87-fx-neon" src/v87/faithful-peek.js
+          grep -q "v87-fx-sparkle" src/v87/faithful-peek.js
+          grep -q "v87-fx-rainbow" src/v87/faithful-peek.js
+          grep -q "v87-fx-fire" src/v87/faithful-peek.js
+          grep -q "v87-fx-glitch" src/v87/faithful-peek.js
+          grep -q "v87-fx-aurora" src/v87/faithful-peek.js
+          grep -q "focuscal-v87-faithful-peek-single-source" sw.js
+          ! grep -q '<script defer src="./src/v70/auto-planner.js' index.html
+      - name: Legacy mirror fallback remains available
+        run: |
           grep -q "const BUILD='86'" src/v85/peek-share-refinement.js
           grep -q "mode:'faithful-live-mirror'" src/v85/peek-share-refinement.js
-          grep -q "localWeekStart" src/v85/peek-share-refinement.js
-          grep -q "fc-v86-sun" src/v85/peek-share-refinement.js
-          grep -q "fc-v86-sat" src/v85/peek-share-refinement.js
-          grep -q "visualMeta" src/v85/peek-share-refinement.js
-          grep -q "mirrorVisualBuild" src/v85/peek-share-refinement.js
-          grep -q "fc-v86-fx-neon" src/v85/peek-share-refinement.js
-          grep -q "fc-v86-fx-sparkle" src/v85/peek-share-refinement.js
-          grep -q "fc-v86-fx-rainbow" src/v85/peek-share-refinement.js
-          grep -q "fc-v86-fx-fire" src/v85/peek-share-refinement.js
-          grep -q "fc-v86-fx-glitch" src/v85/peek-share-refinement.js
-          grep -q "fc-v86-fx-aurora" src/v85/peek-share-refinement.js
-          grep -q "applyRemoteTheme" src/v85/peek-share-refinement.js
-          grep -q "focuscal-v86-faithful-live-peek" sw.js
-          ! grep -q '<script defer src="./src/v70/auto-planner.js' index.html
+          grep -q "peekVisibility!=='private'" peek-cell-style-v59.js
       - name: Unified sharing contract
         run: |
           grep -q "const BUILD='85'" src/v70/collaboration.js
@@ -108,5 +113,4 @@ jobs:
       - name: Existing sharing regression checks
         run: |
           grep -q "リアルタイム共有に接続済み" peek.js
-          grep -q "peekVisibility!=='private'" peek-cell-style-v59.js
           grep -q "collection(db,'feedback')" feedback-v60.js
