@@ -56,16 +56,17 @@
   const PEEK={db:null,auth:null,uid:null,code:null,ready:false,following:new Map(),followers:new Map(),incoming:new Map(),unsubs:[],calUnsub:null,viewUid:null,viewName:'',viewYear:new Date().getFullYear(),viewMonth:new Date().getMonth(),syncTimers:new Map(),fns:null};
   const DAY_NAMES=['日','月','火','水','木','金','土'];
   const CAT_COLORS={work:'#3070d0',personal:'#8050d0',health:'#40a050',family:'#d07020',study:'#d0a020',other:'#607080'};
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]));
   const config=()=>window.FOCUSCAL_FIREBASE_CONFIG||null;
   const configured=()=>{const c=config();return !!(c&&c.apiKey&&c.projectId&&c.appId)};
-  const activeYear=()=>{const y=parseInt(localStorage.getItem('fc_active_year'),10);return y>=2022&&y<=2030?y:new Date().getFullYear()};
+  const activeYear=()=>{const y=parseInt(localStorage.getItem('fc_active_year'),10);return y>=2022&&y<=2035?y:new Date().getFullYear()};
   const displayName=()=>localStorage.getItem('fc_peek_name')||'FocusCal User';
   const makeCode=uid=>{let h=2166136261;for(const ch of uid){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return 'FC'+(h>>>0).toString(36).toUpperCase().padStart(7,'0').slice(0,7)};
   const permId=(owner,viewer)=>`${owner}_${viewer}`;
   const eventDocId=(uid,y,m)=>`${uid}_${y}_${m}`;
   const toast=msg=>{try{if(typeof showUndoToast==='function'){showUndoToast(msg);return}}catch(_){} console.log('[FocusCal]',msg)};
   const status=(html,kind='')=>{const el=document.getElementById('peek-cloud-status');if(el)el.innerHTML=`<div class="peek-status ${kind}">${html}</div>`};
+  const publicAppearance=()=>{try{const s=JSON.parse(localStorage.getItem('fc_settings'))||{};return{theme:s.theme||'violet',bgTint:s.bgTint||'default',ambient:!!s.ambient}}catch{return{theme:'violet',bgTint:'default',ambient:false}}};
 
   function mount(){
     if(document.getElementById('peek-overlay'))return;
@@ -144,11 +145,25 @@
   async function denyRequest(id){try{await PEEK.fns.deleteDoc(PEEK.fns.doc(PEEK.db,'peekRequests',id));toast('申請を拒否しました')}catch(e){console.error(e);toast('拒否に失敗しました')}}
   async function disconnect(uid,mode){try{const owner=mode==='following'?uid:PEEK.uid,viewer=mode==='following'?PEEK.uid:uid;await PEEK.fns.deleteDoc(PEEK.fns.doc(PEEK.db,'peekPermissions',permId(owner,viewer)));toast('閲覧許可を解除しました')}catch(e){console.error(e);toast('解除に失敗しました')}}
 
-  function publicMonth(data){const out={};for(const day of Object.keys(data||{})){const dd=data[day];if(!dd||!Array.isArray(dd.events))continue;const events=dd.events.filter(e=>e.peekVisibility!=='private').map(e=>({title:e.peekVisibility==='busy'?'予定あり':String(e.title||''),cat:e.cat||'other',allday:!!e.allday,start:e.start||'',end:e.end||'',done:!!e.done,visibility:e.peekVisibility||'full'}));if(events.length)out[day]={events}}return out}
+  function publicMonth(data){
+    const out={};
+    for(const day of Object.keys(data||{})){
+      const dd=data[day];if(!dd||typeof dd!=='object')continue;
+      const events=(Array.isArray(dd.events)?dd.events:[]).filter(e=>e.peekVisibility!=='private').map(e=>{const busy=e.peekVisibility==='busy';return{title:busy?'予定あり':String(e.title||''),memo:busy?'':String(e.memo||''),cat:busy?'other':e.cat||'other',allday:!!e.allday,start:busy?'':e.start||'',end:busy?'':e.end||'',done:!!e.done,visibility:e.peekVisibility||'full'}});
+      const color=dd.color||null,effect=dd.effect||null;
+      if(events.length||color||effect)out[day]={events,color,effect};
+    }
+    return out;
+  }
   function loadMonth(y,m){try{return JSON.parse(localStorage.getItem(`fc_${y}_${m}`))||{}}catch(_){return{}}}
-  async function syncMonth(y,m,data){if(!PEEK.ready)return;try{const {doc,setDoc,serverTimestamp}=PEEK.fns;await setDoc(doc(PEEK.db,'events',eventDocId(PEEK.uid,y,m)),{ownerUid:PEEK.uid,year:y,month:m,days:publicMonth(data??loadMonth(y,m)),updatedAt:serverTimestamp()},{merge:false})}catch(e){console.warn('FocusCal sync:',e)}}
-  function queueSync(y,m,data){if(!PEEK.ready)return;const key=`${y}-${m}`;clearTimeout(PEEK.syncTimers.get(key));PEEK.syncTimers.set(key,setTimeout(()=>syncMonth(y,m,data),350))}
-  function syncAllMonths(){if(!PEEK.ready)return;const y=activeYear();for(let m=0;m<12;m++)syncMonth(y,m,loadMonth(y,m))}
+  function syncSignature(y,m,data){try{return JSON.stringify({days:publicMonth(data??loadMonth(y,m)),appearance:publicAppearance()})}catch{return''}}
+  async function syncMonth(y,m,data,force=false){
+    if(!PEEK.ready)return;const raw=data??loadMonth(y,m),sig=syncSignature(y,m,raw),cacheKey=`fc_peek_sync_${y}_${m}`;
+    if(!force&&sig&&localStorage.getItem(cacheKey)===sig)return;
+    try{const {doc,setDoc,serverTimestamp}=PEEK.fns;await setDoc(doc(PEEK.db,'events',eventDocId(PEEK.uid,y,m)),{ownerUid:PEEK.uid,year:y,month:m,days:publicMonth(raw),appearance:publicAppearance(),updatedAt:serverTimestamp()},{merge:true});if(sig)localStorage.setItem(cacheKey,sig)}catch(e){console.warn('FocusCal sync:',e)}
+  }
+  function queueSync(y,m,data){if(!PEEK.ready)return;const key=`${y}-${m}`;clearTimeout(PEEK.syncTimers.get(key));PEEK.syncTimers.set(key,setTimeout(()=>syncMonth(y,m,data),220))}
+  function syncAllMonths(){if(!PEEK.ready)return;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),x=/^fc_(\d{4})_(\d{1,2})$/.exec(k||'');if(x)syncMonth(Number(x[1]),Number(x[2]),undefined,false)}}
 
   function openCalendar(uid){const p=PEEK.following.get(uid)||{};PEEK.viewUid=uid;PEEK.viewName=p.ownerName||'FocusCal User';PEEK.viewYear=activeYear();PEEK.viewMonth=new Date().getMonth();document.getElementById('peek-home').style.display='none';document.getElementById('peek-calendar').classList.add('open');subscribeCalendar()}
   function subscribeCalendar(){if(PEEK.calUnsub){try{PEEK.calUnsub()}catch(_){}}document.getElementById('peek-cal-title').textContent=`${PEEK.viewName}・${PEEK.viewYear}年${PEEK.viewMonth+1}月`;const ref=PEEK.fns.doc(PEEK.db,'events',eventDocId(PEEK.viewUid,PEEK.viewYear,PEEK.viewMonth));PEEK.calUnsub=PEEK.fns.onSnapshot(ref,s=>renderCalendar(s.exists()?s.data().days:{}),e=>{console.error(e);renderCalendar({});toast('閲覧権限または通信状態を確認してください')})}
@@ -160,7 +175,7 @@
   async function changeName(){const n=prompt('相手に表示する名前',displayName());if(!n?.trim())return;const name=n.trim().slice(0,30);localStorage.setItem('fc_peek_name',name);renderIdentity();if(!PEEK.ready)return;try{const {doc,setDoc,serverTimestamp}=PEEK.fns;await setDoc(doc(PEEK.db,'users',PEEK.uid),{displayName:name,code:PEEK.code,updatedAt:serverTimestamp()},{merge:true});for(const [viewer,p] of PEEK.followers){await setDoc(doc(PEEK.db,'peekPermissions',permId(PEEK.uid,viewer)),{ownerUid:PEEK.uid,viewerUid:viewer,active:true,ownerName:name,viewerName:p.viewerName||'FocusCal User',since:p.since||serverTimestamp()},{merge:true})}}catch(e){console.warn(e)}}
 
   const nativeSetItem=Storage.prototype.setItem;
-  Storage.prototype.setItem=function(key,value){nativeSetItem.call(this,key,value);try{const m=/^fc_(\d{4})_(\d{1,2})$/.exec(String(key));if(m&&PEEK.ready){const y=Number(m[1]),mo=Number(m[2]);queueSync(y,mo,JSON.parse(value))}}catch(_){}};
+  Storage.prototype.setItem=function(key,value){nativeSetItem.call(this,key,value);try{const m=/^fc_(\d{4})_(\d{1,2})$/.exec(String(key));if(m&&PEEK.ready){queueSync(Number(m[1]),Number(m[2]),JSON.parse(value))}else if((key==='fc_settings'||key==='fc_holidays_enabled')&&PEEK.ready){setTimeout(syncAllMonths,240)}}catch(_){}};
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
 })();
