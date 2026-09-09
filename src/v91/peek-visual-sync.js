@@ -1,0 +1,14 @@
+(()=>{'use strict';
+const BUILD='91';
+let db=null,auth=null,F=null;const timers=new Map();
+const eventDocId=(u,y,m)=>`${u}_${y}_${m}`;
+const visualKeys=/color|colour|mark|effect|fx|style|border|background|bg|cell|accent|glow|theme/i;
+function visualMonth(y,m){let raw={};try{raw=JSON.parse(localStorage.getItem(`fc_${y}_${m}`))||{}}catch{}const out={};for(const [day,dd] of Object.entries(raw)){if(!dd||typeof dd!=='object')continue;const v={};for(const [k,val] of Object.entries(dd)){if(k==='events')continue;if(!visualKeys.test(k)&&!['marked','doubleMarked','double_marked'].includes(k))continue;if(val==null||['string','number','boolean'].includes(typeof val))v[k]=val}if(Object.keys(v).length)out[day]=v}return out}
+async function firebase(){if(db&&auth?.currentUser)return true;const cfg=window.FOCUSCAL_FIREBASE_CONFIG;if(!cfg)return false;try{const a=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'),u=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js'),f=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');const app=a.getApps().length?a.getApp():a.initializeApp(cfg);auth=u.getAuth(app);db=f.getFirestore(app);F={...f,...u};if(!auth.currentUser)await u.signInAnonymously(auth);return true}catch(e){console.warn('[v91 visual firebase]',e);return false}}
+async function sync(y,m,force=false){if(!(await firebase()))return;const visualDays=visualMonth(y,m),sig=JSON.stringify(visualDays),key=`fc_peek_visual_sync_${y}_${m}`;if(!force&&localStorage.getItem(key)===sig)return;try{await F.setDoc(F.doc(db,'events',eventDocId(auth.currentUser.uid,y,m)),{ownerUid:auth.currentUser.uid,visualDays,visualBuild:BUILD,visualUpdatedAt:F.serverTimestamp()},{merge:true});localStorage.setItem(key,sig)}catch(e){console.warn('[v91 visual sync]',e.code,e.message)}}
+function schedule(y,m,delay=180){const k=`${y}_${m}`;clearTimeout(timers.get(k));timers.set(k,setTimeout(()=>{timers.delete(k);sync(y,m)},delay))}
+function prime(){const months=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),x=/^fc_(\d{4})_(\d{1,2})$/.exec(k||'');if(x)months.push([+x[1],+x[2]])}let n=0;for(const [y,m] of months)setTimeout(()=>sync(y,m),n++*45)}
+function hook(){if(Storage.prototype.setItem.__fcVisual91)return;const prev=Storage.prototype.setItem;const wrapped=function(k,v){const r=prev.call(this,k,v);try{const x=/^fc_(\d{4})_(\d{1,2})$/.exec(String(k));if(x)schedule(+x[1],+x[2])}catch{}return r};wrapped.__fcVisual91=true;Storage.prototype.setItem=wrapped}
+function run(){hook();setTimeout(prime,900);window.FocusCalPeekVisualSync={build:BUILD,sync,prime}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+})();
