@@ -42,23 +42,33 @@ jobs:
           node --check scripts/verify-focuscal.mjs
       - name: Build integrity smoke test
         run: node scripts/verify-focuscal.mjs
-      - name: v85 unified sharing and peek fidelity
+      - name: v86 faithful live peek mirror
         run: |
-          grep -q "const BUILD='85'" index.html
-          grep -q "src/v85/peek-share-refinement.js?v=" index.html
-          grep -q "const BUILD='85'" src/v85/peek-share-refinement.js
+          grep -q "const BUILD='86'" index.html
+          grep -q "const BUILD='86'" src/v85/peek-share-refinement.js
+          grep -q "mode:'faithful-live-mirror'" src/v85/peek-share-refinement.js
           grep -q "localWeekStart" src/v85/peek-share-refinement.js
-          grep -q "reflowWeek" src/v85/peek-share-refinement.js
-          grep -q "fc-v85-colored" src/v85/peek-share-refinement.js
-          grep -q "fc-v85-fx" src/v85/peek-share-refinement.js
+          grep -q "fc-v86-sun" src/v85/peek-share-refinement.js
+          grep -q "fc-v86-sat" src/v85/peek-share-refinement.js
+          grep -q "visualMeta" src/v85/peek-share-refinement.js
+          grep -q "mirrorVisualBuild" src/v85/peek-share-refinement.js
+          grep -q "fc-v86-fx-neon" src/v85/peek-share-refinement.js
+          grep -q "fc-v86-fx-sparkle" src/v85/peek-share-refinement.js
+          grep -q "fc-v86-fx-rainbow" src/v85/peek-share-refinement.js
+          grep -q "fc-v86-fx-fire" src/v85/peek-share-refinement.js
+          grep -q "fc-v86-fx-glitch" src/v85/peek-share-refinement.js
+          grep -q "fc-v86-fx-aurora" src/v85/peek-share-refinement.js
+          grep -q "applyRemoteTheme" src/v85/peek-share-refinement.js
+          grep -q "focuscal-v86-faithful-live-peek" sw.js
+          ! grep -q '<script defer src="./src/v70/auto-planner.js' index.html
+      - name: Unified sharing contract
+        run: |
           grep -q "const BUILD='85'" src/v70/collaboration.js
           grep -q "共有・共同" src/v70/collaboration.js
           grep -q "fc-co-open-peek" src/v70/collaboration.js
           grep -q "const BUILD='85'" src/v76/feature-menu.js
           grep -q "共有・共同" src/v76/feature-menu.js
           grep -q "HIDDEN_ORIGINS" src/v76/feature-menu.js
-          ! grep -q '<script defer src="./src/v70/auto-planner.js' index.html
-          grep -q "focuscal-v85-unified-sharing" sw.js
       - name: v84 seamless month/year swipe contract
         run: |
           grep -q "const BUILD='84'" src/v82/year-wrap.js
