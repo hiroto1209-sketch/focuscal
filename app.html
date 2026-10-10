@@ -3555,7 +3555,7 @@ document.getElementById('col-apply').onclick=()=>{
   dd.effect=fxSel==='none'?null:fxSel;
   saveMonth(m,md);colOverlay.classList.remove('open');
   refreshPages();updatePreview();
-  if(dd.effect)fireDanmaku(3); // small celebration for marking a fun event
+  fireDanmaku(3); // Celebrate any saved color/effect selection
 };
 document.getElementById('col-cancel').onclick=()=>colOverlay.classList.remove('open');
 colOverlay.onclick=e=>{if(e.target===colOverlay)colOverlay.classList.remove('open')};
@@ -3758,6 +3758,7 @@ function doSaveEvent(){
   renderList(m,d);refreshPages();updateAll();
   const r=document.getElementById('f-save').getBoundingClientRect();
   burst(r.left+r.width/2,r.top);
+  if(!isEdit)fireDanmaku(3); // Celebrate a newly added event
 }
 document.getElementById('f-save').onclick=doSaveEvent;
 document.getElementById('ev-header-save').onclick=doSaveEvent;
